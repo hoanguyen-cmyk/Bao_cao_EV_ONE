@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV ONE - Toàn Cảnh Marketing & Trạm Sạc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap');
+        body { font-family: 'Lexend', sans-serif; background-color: #f0f2f5; color: #1e293b; }
+        .sidebar-item.active { background-color: #10b981; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .sidebar-item.active i { color: white !important; }
+        .tab-content { display: none; transition: all 0.3s ease; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        [contenteditable="true"]:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
+        .editable-area { outline: none; transition: all 0.2s ease; border: 1px solid transparent; }
+        .editable-area:hover { border-color: #cbd5e1; background-color: rgba(255,255,255,0.6); }
+        .editable-area:focus { background-color: #ffffff !important; box-shadow: 0 0 0 2px #10b981; border-color: transparent; border-radius: 6px; }
+        
+        .chart-scroller { overflow-x: auto; overflow-y: hidden; padding-bottom: 10px; }
+        .chart-scroller::-webkit-scrollbar { height: 6px; }
+        .chart-scroller::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .chart-scroller::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        .news-images img { max-width: 100%; border-radius: 8px; margin: 10px 0; max-height: 300px; object-fit: contain; }
+
+        /* Trạng thái lưu đám mây */
+        #sync-status { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #1e293b; color: white; border-radius: 8px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s; opacity: 0; pointer-events: none; z-index: 9999; }
+        #sync-status.show { opacity: 1; transform: translateY(-10px); }
+        #sync-status.success { background: #10b981; }
+        #sync-status.error { background: #ef4444; }
+        
+        /* CSS ẩn tiêu đề in ấn trên web */
+        .hidden.print-title { display: none; }
+    </style>
+</head>
+<body class="flex flex-col lg:flex-row min-h-screen">
+
+    <div id="sync-status"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> Đang lưu lên đám mây...</div>
+
+    <aside class="w-full lg:w-72 bg-slate-900 text-slate-300 flex-shrink-0 z-50 shadow-2xl h-auto lg:min-h-screen" data-html2canvas-ignore="true">
+        <div class="p-8 border-b border-slate-800 flex items-center justify-center min-h-[100px]">
+            <img src="https://lh3.googleusercontent.com/u/0/d/1qqjUkWR0lopyAiK_LtJgLNFeZu-PGNWW" alt="EV ONE Logo" class="max-h-12 w-auto object-contain" id="evone-logo">
+            <script>
+                document.getElementById('evone-logo').onerror = function() {
+                    this.src = 'https://drive.google.com/uc?export=view&id=1qqjUkWR0lopyAiK_LtJgLNFeZu-PGNWW';
+                };
+            </script>
+        </div>
+        
+        <nav class="p-4 space-y-1.5 mt-2" id="main-nav">
+            <button onclick="switchTab('news', this)" class="sidebar-item active w-full flex items-center p-3 text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-xl font-bold hover:bg-indigo-500/20 transition mb-2">
+                <i class="fa-solid fa-newspaper mr-3 w-5"></i> TIN TỨC & GHI CHÚ
+            </button>
+            <button onclick="switchTab('competitors', this)" class="sidebar-item w-full flex items-center p-3 text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-xl font-bold hover:bg-orange-500/20 transition mb-2">
+                <i class="fa-solid fa-charging-station mr-3 w-5"></i> TRẠM SẠC ĐỐI THỦ
+            </button>
+            <button onclick="switchTab('overview', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group">
+                <i class="fa-solid fa-chart-pie mr-3 w-5"></i> Tổng Quan
+            </button>
+            
+            <hr class="border-slate-800 my-2">
+            <button onclick="switchTab('facebook', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-brands fa-facebook mr-3 w-5 text-blue-500"></i> Facebook</button>
+            <button onclick="switchTab('tiktok', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-brands fa-tiktok mr-3 w-5 text-white"></i> TikTok</button>
+            <button onclick="switchTab('instagram', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-brands fa-instagram mr-3 w-5 text-pink-500"></i> Instagram</button>
+            <button onclick="switchTab('website', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-solid fa-globe mr-3 w-5 text-emerald-500"></i> Website</button>
+            <button onclick="switchTab('youtube', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-brands fa-youtube mr-3 w-5 text-red-600"></i> Youtube</button>
+            <button onclick="switchTab('maps', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-solid fa-location-dot mr-3 w-5 text-orange-500"></i> Google Maps</button>
+            <button onclick="switchTab('seeding', this)" class="sidebar-item w-full flex items-center p-3 rounded-xl transition hover:bg-slate-800 group"><i class="fa-solid fa-comments mr-3 w-5 text-indigo-400"></i> Seeding Group</button>
+            <hr class="border-slate-800 my-4">
+            <button onclick="switchTab('leads', this)" class="sidebar-item w-full flex items-center p-4 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl font-bold hover:bg-emerald-500/20 transition">
+                <i class="fa-solid fa-users-gear mr-3"></i> DỮ LIỆU KHÁCH HÀNG
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-grow p-4 lg:p-8 overflow-x-hidden" id="report-content">
+        
+        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4" data-html2canvas-ignore="true">
+            <div>
+                <h2 id="tab-title" class="text-3xl font-bold text-slate-800">Tin tức & Ghi chú Thị trường</h2>
+                <div class="flex items-center gap-2 mt-2">
+                    <p class="text-slate-500 text-sm">Xem dữ liệu đến chu kỳ:</p>
+                    <select id="cycle-filter" onchange="applyFilter()" class="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-1 font-bold shadow-sm transition">
+                        <option value="all">Đang tải...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 items-center bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+                <div class="relative w-full sm:w-[320px]">
+                    <i class="fa-solid fa-link absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="sheetUrlInput" placeholder="Đang sử dụng Link Hệ thống..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                </div>
+                <button onclick="fetchFromGoogleSheet(this)" id="btn-sync" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold shadow-sm transition text-sm flex items-center whitespace-nowrap">
+                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i> Đồng bộ Data
+                </button>
+                <div class="w-px h-8 bg-slate-200 mx-1 hidden sm:block"></div>
+                <button onclick="exportToPDF()" class="px-4 py-2 bg-red-100 text-red-700 border border-red-200 rounded-xl hover:bg-red-200 font-bold transition text-sm flex items-center whitespace-nowrap" title="Xuất báo cáo dưới dạng file PDF">
+                    <i class="fa-solid fa-file-pdf mr-1"></i> Xuất PDF
+                </button>
+            </div>
+        </header>
+
+        <div id="pdf-header" style="display:none;" class="mb-8 text-center border-b pb-4">
+            <h1 class="text-3xl font-black text-emerald-700 uppercase">BÁO CÁO HOẠT ĐỘNG EV ONE</h1>
+            <p class="text-slate-500 mt-2" id="pdf-date"></p>
+        </div>
+
+        <div id="news" class="tab-content active space-y-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-700 text-lg">Sổ tay ghi chú & Cập nhật thị trường</h3>
+                <button onclick="addNewWeek()" data-html2canvas-ignore="true" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-bold shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Thêm báo cáo tuần mới
+                </button>
+            </div>
+            <div id="news-container" class="space-y-4"></div>
+        </div>
+
+        <div id="overview" class="tab-content space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-6 border-b-4 border-emerald-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng Tiếp Cận</p><h3 class="text-3xl font-bold mt-2" id="total-reach">0</h3></div>
+                <div class="card p-6 border-b-4 border-blue-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng Bài Viết</p><h3 class="text-3xl font-bold mt-2" id="total-posts">0</h3></div>
+                <div class="card p-6 border-b-4 border-pink-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng Follow Mới</p><h3 class="text-3xl font-bold mt-2" id="total-followers">0</h3></div>
+                <div class="card p-6 border-b-4 border-indigo-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng Leads</p><h3 class="text-3xl font-bold mt-2" id="total-leads">0</h3></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6 flex flex-col"><h4 class="font-bold text-slate-700 mb-6"><i class="fa-solid fa-layer-group mr-2 text-emerald-500"></i> Bài viết tích lũy đa kênh</h4><div class="relative flex-grow h-[350px] w-full"><canvas id="stackedPostChart"></canvas></div></div>
+                <div class="card p-6 flex flex-col"><h4 class="font-bold text-slate-700 mb-6"><i class="fa-solid fa-user-plus mr-2 text-pink-500"></i> Lượt Follow đa kênh</h4><div class="relative flex-grow h-[350px] w-full"><canvas id="followersChart"></canvas></div></div>
+            </div>
+            <div class="card p-6 bg-slate-900 text-white relative">
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="font-bold text-emerald-400 uppercase text-xs tracking-widest">Phân tích hệ thống tự động</h4>
+                    <span data-html2canvas-ignore="true" class="text-[10px] text-slate-400 italic bg-slate-800 px-3 py-1 rounded-full"><i class="fa-solid fa-pen mr-1"></i> Click vào văn bản để chỉnh sửa</span>
+                </div>
+                <div class="space-y-6">
+                    <div><p class="text-sm font-bold border-l-2 border-emerald-500 pl-3 mb-2">Ưu điểm:</p><div contenteditable="true" id="overview-pros" oninput="saveAnalysis('overview', 'pros', this.innerHTML)" class="editable-area text-xs text-slate-300 leading-relaxed italic p-3 -ml-3 rounded hover:bg-slate-800 min-h-[40px]"></div></div>
+                    <div><p class="text-sm font-bold border-l-2 border-red-500 pl-3 mb-2">Nhược điểm:</p><div contenteditable="true" id="overview-cons" oninput="saveAnalysis('overview', 'cons', this.innerHTML)" class="editable-area text-xs text-slate-300 leading-relaxed italic p-3 -ml-3 rounded hover:bg-slate-800 min-h-[40px]"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="competitors" class="tab-content space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card p-6 border-b-4 border-slate-700"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Trung bình Giá AC Toàn TT</p><h3 class="text-2xl font-bold mt-2 text-slate-700" id="avg-price-ac">0đ / kWh</h3></div>
+                <div class="card p-6 border-b-4 border-orange-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Trung bình Giá DC Toàn TT</p><h3 class="text-2xl font-bold mt-2 text-orange-600" id="avg-price-dc">0đ / kWh</h3></div>
+                <div class="card p-6 border-b-4 border-emerald-500 bg-emerald-500/10 flex flex-col justify-center"><p class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Tổng Trạm Toàn Thị Trường</p><h3 class="text-3xl font-black mt-1 text-emerald-600" id="latest-total-stations">0</h3><div class="mt-3 pt-3 border-t border-emerald-200/50" id="regional-breakdown"></div></div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-8">
+                <div class="card p-6 flex flex-col">
+                    <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-table-list mr-2 text-blue-500"></i> Thống kê Trạm sạc các đơn vị (Kỳ hiện tại)</h4>
+                    <div class="overflow-x-auto w-full rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse text-sm min-w-[800px]" id="compGrowthTable"></table>
+                    </div>
+                </div>
+                
+                <div class="card p-6 flex flex-col">
+                    <h4 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-plug mr-2 text-emerald-500"></i> Cơ cấu Trạm AC & DC (Top 10 đơn vị)</h4>
+                    <div class="mb-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg text-[13px] text-emerald-800 leading-relaxed" id="summary-acdc" contenteditable="true" oninput="saveAnalysis('competitors', 'acdc', this.innerHTML)"></div>
+                    <div class="relative w-full h-[450px]" id="wrapper-acdc"><canvas id="compAcDcChart"></canvas></div>
+                </div>
+
+                <div class="card p-6 flex flex-col">
+                    <h4 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-bolt mr-2 text-yellow-500"></i> Phân bổ theo Công suất (Top 10 đơn vị)</h4>
+                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-100 rounded-lg text-[13px] text-yellow-800 leading-relaxed" id="summary-power" contenteditable="true" oninput="saveAnalysis('competitors', 'power', this.innerHTML)"></div>
+                    <div class="relative w-full h-[450px]" id="wrapper-power"><canvas id="compPowerChart"></canvas></div>
+                </div>
+
+                <div class="card p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-bold text-slate-700"><i class="fa-solid fa-money-bill-wave mr-2 text-green-600"></i> Bảng giá dịch vụ sạc & Khuyến mãi (Top 10 đơn vị)</h4>
+                    </div>
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-xs font-bold text-blue-800 mb-2 uppercase">Cập nhật Chương trình khuyến mãi <span data-html2canvas-ignore="true" class="text-[10px] text-blue-500 font-normal ml-2 italic"><i class="fa-solid fa-pen"></i> click để sửa</span></p>
+                        <div class="editable-area text-[13px] text-blue-900 leading-relaxed min-h-[40px] bg-white/60 p-3 rounded" id="summary-promo" contenteditable="true" placeholder="Nhập các gói cước, chương trình khuyến mãi..." oninput="saveAnalysis('competitors', 'promo', this.innerHTML)"></div>
+                    </div>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 w-full">
+                        <div class="flex flex-col">
+                            <h5 class="text-sm font-bold text-blue-600 mb-2 text-center">Giá Sạc AC</h5>
+                            <div class="relative w-full h-[400px]" id="wrapper-price-ac"><canvas id="compPriceAcChart"></canvas></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <h5 class="text-sm font-bold text-orange-600 mb-2 text-center">Giá Sạc DC</h5>
+                            <div class="relative w-full h-[400px]" id="wrapper-price-dc"><canvas id="compPriceDcChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="channel-detail" class="tab-content space-y-8">
+            <div id="channel-metrics" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
+            <div id="dynamic-charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8"></div>
+            <div id="channel-analysis" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        </div>
+
+        <div id="leads" class="tab-content space-y-8">
+            <div class="card p-6">
+                <h4 class="font-bold text-slate-700 mb-6"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i> Nguồn Khách Hàng (Leads)</h4>
+                <div class="relative h-[450px] w-full"><canvas id="leadsStackedChart"></canvas></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        Chart.defaults.set('plugins.datalabels', { display: true, font: { family: 'Lexend' } });
+        Chart.defaults.set('plugins.legend', { position: 'bottom', labels: { padding: 20, usePointStyle: true, boxWidth: 8, font: {family: 'Lexend'} } });
+        Chart.defaults.font.family = 'Lexend';
+
+        // =========================================================================
+        // BƯỚC QUAN TRỌNG NHẤT: DÁN LINK APPS SCRIPT CỦA BẠN VÀO GIỮA 2 DẤU NGOẶC KÉP BÊN DƯỚI
+        // Ví dụ: const FIXED_API_URL = "https://script.google.com/macros/s/AKfy.../exec";
+        // =========================================================================
+        const FIXED_API_URL = "https://script.google.com/macros/s/AKfycbwhTh996-ASkX9R1pN1UkGml9rtHM-DKsNsMsL6ImCAORLfSpY6PB48F3j6i0NJz1QPsA/exec"; 
+        // =========================================================================
+
+        let activeTab = 'news'; 
+        let currentChartInstances = []; 
+        let currentFilterIndex = -1; 
+        
+        let defaultTextAnalysis = {
+            overview: { pros: "", cons: "", action: "" },
+            facebook: { pros: "", cons: "", action: "" }, tiktok: { pros: "", cons: "", action: "" }, instagram: { pros: "", cons: "", action: "" }, website: { pros: "", cons: "", action: "" }, youtube: { pros: "", cons: "", action: "" }, maps: { pros: "", cons: "", action: "" }, seeding: { pros: "", cons: "", action: "" },
+            competitors: { acdc: "", power: "", promo: "" },
+            newsList: [] 
+        };
+
+        let textAnalysis = defaultTextAnalysis; 
+
+        // --- CƠ CHẾ ĐỒNG BỘ ĐÁM MÂY (CLOUD SYNC) ĐÃ FIX ---
+        let syncTimeout;
+
+        function saveToCloud() {
+            let apiUrl = (FIXED_API_URL && FIXED_API_URL.includes("script.google.com")) ? FIXED_API_URL : document.getElementById('sheetUrlInput').value.trim();
+            if(!apiUrl) return;
+
+            const statusEl = document.getElementById('sync-status');
+            if(!statusEl) return;
+
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang lưu lên đám mây...';
+            statusEl.className = 'show';
+
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                fetch(apiUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(textAnalysis),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                }).then(res => {
+                    statusEl.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Đã lưu an toàn!';
+                    statusEl.className = 'show success';
+                    setTimeout(() => statusEl.classList.remove('show'), 2000);
+                }).catch(err => {
+                    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Lỗi lưu trữ!';
+                    statusEl.className = 'show error';
+                    setTimeout(() => statusEl.classList.remove('show'), 3000);
+                });
+            }, 1000); 
+        }
+
+        function saveAnalysis(tab, field, htmlContent) { 
+            if(textAnalysis[tab]) { textAnalysis[tab][field] = htmlContent; saveToCloud(); }
+        }
+
+        let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[]}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} }, stations: {} };
+        let filteredData = JSON.parse(JSON.stringify(parsedData));
+
+        function clearAllCharts() { currentChartInstances.forEach(chart => chart.destroy()); currentChartInstances = []; }
+        function sumArray(arr) { return (arr || []).reduce((a, b) => Number(a) + Number(b), 0); }
+        function getLast(arr) { return arr && arr.length > 0 ? arr[arr.length - 1] : 0; }
+
+        function updateFilterDropdown() {
+            const select = document.getElementById('cycle-filter');
+            select.innerHTML = '<option value="all">Tất cả chu kỳ</option>';
+            parsedData.months.forEach((m, idx) => { select.innerHTML += `<option value="${idx}">Đến hết ${m}</option>`; });
+            select.value = currentFilterIndex === -1 ? 'all' : currentFilterIndex;
+        }
+
+        function applyFilter() {
+            const val = document.getElementById('cycle-filter').value;
+            currentFilterIndex = val === 'all' ? -1 : parseInt(val);
+            if (currentFilterIndex === -1) { filteredData = JSON.parse(JSON.stringify(parsedData)); } 
+            else {
+                const sliceIdx = currentFilterIndex + 1; filteredData = JSON.parse(JSON.stringify(parsedData)); filteredData.months = parsedData.months.slice(0, sliceIdx);
+                const sliceObj = (obj) => { Object.keys(obj).forEach(k => { if (Array.isArray(obj[k])) obj[k] = obj[k].slice(0, sliceIdx); else if (typeof obj[k] === 'object' && obj[k] !== null) sliceObj(obj[k]); }); };
+                sliceObj(filteredData.marketing); sliceObj(filteredData.stations);
+            }
+            generateAllInsights();
+            switchTab(activeTab, null); 
+        }
+
+        function generateAllInsights() {
+            let fd = filteredData.marketing;
+            let totalLeads = sumArray(fd.leads.fb) + sumArray(fd.leads.tk) + sumArray(fd.leads.web) + sumArray(fd.leads.map);
+            if(!textAnalysis.overview.pros) textAnalysis.overview.pros = `Tổng mức độ tiếp cận đa kênh duy trì ổn định.<br>Hệ thống tạo ra <b>${totalLeads.toLocaleString('vi-VN')} leads</b> tổng cộng, phễu marketing đang hoạt động tốt.`;
+            if(!textAnalysis.overview.cons) textAnalysis.overview.cons = `Tốc độ tăng trưởng ở một số nền tảng cốt lõi còn chậm.<br>Cần theo dõi thêm tỷ lệ chuyển đổi Lead thực tế.`;
+            const channels = ['facebook', 'tiktok', 'instagram', 'website', 'youtube', 'maps', 'seeding'];
+            channels.forEach(ch => {
+                if(!textAnalysis[ch].pros) textAnalysis[ch].pros = `Xu hướng tăng trưởng duy trì tốt so với kỳ trước.<br>Chỉ số tương tác ở mức ổn định và đều đặn.`;
+                if(!textAnalysis[ch].cons) textAnalysis[ch].cons = `Chưa có nội dung thực sự bứt phá (Viral) để lan truyền mạnh.<br>Cần tối ưu chi phí thu hút khách hàng.`;
+                if(!textAnalysis[ch].action) textAnalysis[ch].action = `Tập trung sản xuất nội dung ngắn giải đáp thắc mắc về sạc xe điện.<br>Theo dõi chặt chẽ và điều chỉnh thông điệp kêu gọi hành động (CTA).`;
+            });
+            saveToCloud();
+        }
+
+        function getAutoNews() {
+            return `<b>Nhận định tự động:</b> Trong tuần qua, thị trường ghi nhận sự mở rộng về số lượng trạm sạc. Các thương hiệu tiếp tục đẩy mạnh vị thế tại các điểm đỗ chiến lược. Cần tập trung làm nổi bật chính sách giá sạc AC của EV ONE.`;
+        }
+
+        // --- XUẤT BÁO CÁO RA PDF ---
+        function exportToPDF() {
+            document.getElementById('pdf-header').style.display = 'block';
+            document.getElementById('pdf-date').innerText = 'Dữ liệu được trích xuất ngày: ' + new Date().toLocaleDateString('vi-VN');
+            const element = document.getElementById('report-content');
+            document.querySelectorAll('details').forEach(el => el.setAttribute('open', ''));
+
+            const opt = {
+                margin: 10, filename: `Bao_Cao_EV_ONE_${activeTab}_${new Date().getTime()}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a3', orientation: 'portrait' } 
+            };
+
+            alert("Hệ thống đang tiến hành dàn trang và chụp ảnh báo cáo. Quá trình này mất khoảng 2-5 giây, vui lòng không cuộn chuột!");
+            html2pdf().set(opt).from(element).save().then(() => { document.getElementById('pdf-header').style.display = 'none'; });
+        }
+
+        function switchTab(tabId, element) {
+            activeTab = tabId;
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            if (element) { element.classList.add('active'); } 
+            else { document.querySelectorAll('.sidebar-item').forEach(item => { if(item.getAttribute('onclick').includes(tabId)) item.classList.add('active'); }); }
+            
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            const title = document.getElementById('tab-title');
+            
+            if (tabId === 'overview') { document.getElementById('overview').classList.add('active'); title.innerText = "Dashboard Tổng Quan"; initOverview(); } 
+            else if (tabId === 'leads') { document.getElementById('leads').classList.add('active'); title.innerText = "Dữ Liệu Khách Hàng"; renderLeadsChart(); } 
+            else if (tabId === 'competitors') { document.getElementById('competitors').classList.add('active'); title.innerText = "Phân tích Hạ tầng & Đối thủ"; renderCompetitorsChart(); } 
+            else if (tabId === 'news') { document.getElementById('news').classList.add('active'); title.innerText = "Tin tức & Ghi chú Thị trường"; renderNewsTab(); }
+            else { document.getElementById('channel-detail').classList.add('active'); title.innerText = "Phân tích Kênh " + tabId.toUpperCase(); loadChannelDetail(tabId); }
+        }
+
+        function renderNewsTab() {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            if(textAnalysis.newsList.length === 0) {
+                 container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">Chưa có báo cáo tuần nào. Hãy bấm "Thêm báo cáo tuần mới"</div>`;
+                 return;
+            }
+
+            textAnalysis.newsList.forEach((news, index) => {
+                const isOpen = index === 0 ? 'open' : ''; 
+                const html = `
+                    <details class="card bg-white border border-slate-200 group overflow-hidden" ${isOpen}>
+                        <summary class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition" data-html2canvas-ignore="true">
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-pen text-slate-400 text-xs"></i><span contenteditable="true" class="editable-area px-2 py-1 min-w-[200px] rounded" oninput="updateNewsTitle('${news.id}', this.innerText)">${news.title}</span></div>
+                            <div class="flex items-center gap-3"><button onclick="deleteNews('${news.id}')" class="text-red-400 hover:text-red-600 text-sm p-2"><i class="fa-solid fa-trash"></i></button><i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition p-2"></i></div>
+                        </summary>
+                        <div class="hidden print-title p-4 font-black text-xl text-indigo-800 border-b border-slate-200 bg-slate-50">${news.title}</div>
+                        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="flex flex-col">
+                                <div class="flex justify-between items-center mb-2"><h4 class="font-bold text-indigo-800 text-sm uppercase"><i class="fa-solid fa-comment-dots mr-2"></i> Ghi chú & Đánh giá</h4><span class="text-[10px] text-slate-400 italic bg-slate-100 px-2 py-1 rounded" data-html2canvas-ignore="true"><i class="fa-solid fa-pen"></i> Click để sửa</span></div>
+                                <div contenteditable="true" id="notes-${news.id}" oninput="saveNewsContent('${news.id}', 'notes', this.innerHTML)" class="editable-area text-sm text-slate-700 bg-indigo-50/30 p-4 rounded-lg border border-indigo-200 flex-grow min-h-[200px] leading-relaxed">${news.notes}</div>
+                            </div>
+                            <div class="flex flex-col">
+                                <div class="flex justify-between items-center mb-2"><h4 class="font-bold text-emerald-800 text-sm uppercase"><i class="fa-solid fa-image mr-2"></i> Hình ảnh Trạm / Sự kiện</h4><span class="text-[10px] text-slate-400 italic bg-slate-100 px-2 py-1 rounded" data-html2canvas-ignore="true">Copy & Paste ảnh vào khung</span></div>
+                                <div contenteditable="true" id="images-${news.id}" oninput="saveNewsContent('${news.id}', 'images', this.innerHTML)" class="news-images editable-area text-sm p-4 border-2 border-dashed border-emerald-300 bg-emerald-50/20 rounded-lg flex-grow min-h-[200px] overflow-auto">${news.images}</div>
+                            </div>
+                        </div>
+                    </details>`;
+                container.innerHTML += html;
+            });
+            document.querySelectorAll('details').forEach(d => { d.style.display = 'block'; });
+        }
+
+        function addNewWeek() { textAnalysis.newsList.unshift({ id: 'w' + Date.now(), title: 'Báo cáo Tuần mới - ' + new Date().toLocaleDateString('vi-VN'), notes: getAutoNews(), images: '' }); saveToCloud(); renderNewsTab(); }
+        function deleteNews(id) { if(confirm("Xóa báo cáo tuần này?")) { textAnalysis.newsList = textAnalysis.newsList.filter(n => n.id !== id); saveToCloud(); renderNewsTab(); } }
+        function updateNewsTitle(id, text) { let item = textAnalysis.newsList.find(n => n.id === id); if(item) { item.title = text; saveToCloud(); } }
+        function saveNewsContent(id, field, htmlContent) { let item = textAnalysis.newsList.find(n => n.id === id); if(item) { item[field] = htmlContent; saveToCloud(); } }
+
+        function renderChart(canvasId, type, labelsArray, datasets, isHorizontal = false, isStacked = false) {
+            const ctx = document.getElementById(canvasId); if(!ctx) return;
+            let options = { 
+                indexAxis: isHorizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false, 
+                plugins: { datalabels: { display: true, color: isStacked ? 'white' : (type === 'line' ? '#1e293b' : '#475569'), font: {weight:'bold', size:10}, anchor: isStacked ? 'center' : 'end', align: isStacked ? 'center' : (isHorizontal ? 'right' : 'top'), offset: type === 'line' ? 6 : 4, backgroundColor: type === 'line' ? 'rgba(255,255,255,0.7)' : 'transparent', borderRadius: 4, formatter: function(v) { if (!v || v == 0) return ''; return v >= 10000 ? (v/1000).toFixed(1) + 'k' : v.toLocaleString('vi-VN'); } } }, 
+                layout: { padding: isHorizontal ? {right: 50} : { top: 35, bottom: 10 } }, animation: { duration: 0 } 
+            };
+            if (isStacked) { options.scales = { x: { stacked: true }, y: { stacked: true } }; }
+            const chart = new Chart(ctx, { type: type, data: { labels: labelsArray, datasets: datasets }, options: options });
+            currentChartInstances.push(chart);
+        }
+
+        function initOverview() {
+            clearAllCharts(); let mk = filteredData.marketing;
+            document.getElementById('overview-pros').innerHTML = textAnalysis.overview.pros || ''; document.getElementById('overview-cons').innerHTML = textAnalysis.overview.cons || '';
+            let tPosts = sumArray(mk.posts.fb) + sumArray(mk.posts.tk) + sumArray(mk.posts.ig) + sumArray(mk.posts.web) + sumArray(mk.posts.yt) + sumArray(mk.posts.map) + sumArray(mk.posts.seed);
+            let tReach = sumArray(mk.reach.fb) + sumArray(mk.reach.tk) + sumArray(mk.reach.ig);
+            let tFollowers = sumArray(mk.follow.fb) + sumArray(mk.follow.tk) + sumArray(mk.follow.ig);
+            let tLeads = sumArray(mk.leads.fb) + sumArray(mk.leads.tk) + sumArray(mk.leads.web) + sumArray(mk.leads.map);
+            document.getElementById('total-posts').innerText = tPosts.toLocaleString('vi-VN'); document.getElementById('total-reach').innerText = tReach.toLocaleString('vi-VN'); document.getElementById('total-followers').innerText = tFollowers.toLocaleString('vi-VN'); document.getElementById('total-leads').innerText = tLeads.toLocaleString('vi-VN');
+
+            renderChart('stackedPostChart', 'bar', filteredData.months, [ { label: 'Facebook', data: mk.posts.fb, backgroundColor: '#3b82f6' }, { label: 'TikTok', data: mk.posts.tk, backgroundColor: '#1e293b' }, { label: 'Instagram', data: mk.posts.ig, backgroundColor: '#ec4899' }, { label: 'Website', data: mk.posts.web, backgroundColor: '#10b981' }, { label: 'Seeding', data: mk.posts.seed, backgroundColor: '#6366f1' } ], false, true); 
+            renderChart('followersChart', 'bar', filteredData.months, [ { label: 'Facebook', data: mk.follow.fb, backgroundColor: '#3b82f6', borderRadius: 4 }, { label: 'TikTok', data: mk.follow.tk, backgroundColor: '#1e293b', borderRadius: 4 }, { label: 'Instagram', data: mk.follow.ig, backgroundColor: '#ec4899', borderRadius: 4 }, { label: 'YouTube', data: mk.ytSubs, backgroundColor: '#ef4444', borderRadius: 4 } ]);
+        }
+
+        function loadChannelDetail(tabId) {
+            clearAllCharts(); const mk = filteredData.marketing; const txt = textAnalysis[tabId] || {};
+            const metricsDiv = document.getElementById('channel-metrics'); const container = document.getElementById('dynamic-charts-container'); const analysisDiv = document.getElementById('channel-analysis');
+            metricsDiv.innerHTML = ''; container.innerHTML = ''; container.className = 'grid gap-8'; 
+            const makeCard = (title, val, color) => `<div class="card p-4 border-l-4 border-${color}"><p class="text-[10px] font-bold text-slate-400 uppercase">${title}</p><h3 class="text-xl font-bold mt-1">${val.toLocaleString('vi-VN')}</h3></div>`;
+            const makeCanvasHTML = (id, title, fullSpan=false) => `<div class="card p-6 flex flex-col ${fullSpan ? 'lg:col-span-2' : ''}"><h4 class="font-bold mb-4">${title}</h4><div class="relative flex-grow h-[300px] w-full"><canvas id="${id}"></canvas></div></div>`;
+
+            if (['facebook', 'instagram'].includes(tabId)) { let idc = tabId === 'facebook' ? 'fb' : 'ig'; container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts[idc]), 'slate-700') + makeCard('Tiếp Cận', sumArray(mk.reach[idc]), 'emerald-500') + makeCard('Follower', getLast(mk.follow[idc]), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact[idc]), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Số Lượng Bài Viết') + makeCanvasHTML('chart2', 'Lượt Tiếp Cận & Tương Tác'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts[idc], backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [ {label: 'Tiếp Cận', data: mk.reach[idc], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4}, {label: 'Tương Tác', data: mk.interact[idc], borderColor: '#3b82f6', tension: 0.4} ]); }, 50); } 
+            else if (tabId === 'tiktok') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts.tk), 'slate-700') + makeCard('Lượt Xem', sumArray(mk.views.tk), 'red-500') + makeCard('Follower', getLast(mk.follow.tk), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact.tk), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Viết') + makeCanvasHTML('chart2', 'Views'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts.tk, backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Views', data: mk.views.tk, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); }, 50); }
+            else if (tabId === 'website') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); let wbd = mk.webDetail; let avgBounce = wbd.bounce.length > 0 ? (sumArray(wbd.bounce) / wbd.bounce.length).toFixed(1) : 0; metricsDiv.innerHTML = makeCard('Bài Viết', sumArray(mk.posts.web), 'slate-700') + makeCard('Truy Cập', sumArray(wbd.views), 'emerald-500') + makeCard('Tỉ Lệ Thoát (Avg)', avgBounce + '%', 'orange-500'); container.innerHTML = makeCanvasHTML('chart1', 'Truy Cập (Pageviews)') + makeCanvasHTML('chart2', 'Thời Gian Ở Lại (Phút)'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Truy cập', data: wbd.views, backgroundColor: '#10b981'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Phút', data: wbd.time, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4}]); }, 50); }
+            else if (tabId === 'youtube') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Video', sumArray(mk.posts.yt), 'slate-700') + makeCard('Tổng Xem', sumArray(mk.views.yt), 'red-500') + makeCard('Subscribe Tích Lũy', getLast(mk.ytSubs), 'pink-500'); container.innerHTML = makeCanvasHTML('chart1', 'Views') + makeCanvasHTML('chart2', 'Subscribe'); setTimeout(() => { renderChart('chart1', 'line', filteredData.months, [{label: 'Views', data: mk.views.yt, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); renderChart('chart2', 'bar', filteredData.months, [{label: 'Subscribe', data: mk.ytSubs, backgroundColor: '#ec4899'}]); }, 50); }
+            else if (tabId === 'maps') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Post', sumArray(mk.posts.map), 'slate-700') + makeCard('Clicks', sumArray(mk.mapDetail.clicks), 'orange-500') + makeCard('Tìm Kiếm', sumArray(mk.mapDetail.search), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Lượt Nhấp & Tìm Kiếm'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [ {label: 'Lượt Nhấp', data: mk.mapDetail.clicks, backgroundColor: '#f97316'}, {label: 'Tìm Kiếm', data: mk.mapDetail.search, backgroundColor: '#3b82f6'} ]); }, 50); }
+            else if (tabId === 'seeding') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Bài Seeding', sumArray(mk.posts.seed), 'indigo-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Đăng Seeding'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Đăng', data: mk.posts.seed, backgroundColor: '#6366f1'}]); }, 50); }
+
+            analysisDiv.innerHTML = `
+                <div class="card p-5 bg-emerald-50 border border-emerald-100"><p class="font-bold text-emerald-800 text-sm mb-2 uppercase">Ưu Điểm <span data-html2canvas-ignore="true" class="text-[10px] text-emerald-500 font-normal ml-2 italic"><i class="fa-solid fa-pen"></i> click để sửa</span></p><div contenteditable="true" id="pros-${tabId}" oninput="saveAnalysis('${tabId}', 'pros', this.innerHTML)" class="editable-area text-xs text-emerald-700 leading-relaxed p-3 -ml-2 rounded min-h-[40px] bg-white/70">${txt.pros || ''}</div></div>
+                <div class="card p-5 bg-red-50 border border-red-100"><p class="font-bold text-red-800 text-sm mb-2 uppercase">Nhược Điểm <span data-html2canvas-ignore="true" class="text-[10px] text-red-500 font-normal ml-2 italic"><i class="fa-solid fa-pen"></i> click để sửa</span></p><div contenteditable="true" id="cons-${tabId}" oninput="saveAnalysis('${tabId}', 'cons', this.innerHTML)" class="editable-area text-xs text-red-700 leading-relaxed p-3 -ml-2 rounded min-h-[40px] bg-white/70">${txt.cons || ''}</div></div>
+                <div class="card p-5 bg-blue-50 border border-blue-100"><p class="font-bold text-blue-800 text-sm mb-2 uppercase">Đề xuất cải thiện <span data-html2canvas-ignore="true" class="text-[10px] text-blue-500 font-normal ml-2 italic"><i class="fa-solid fa-pen"></i> click để sửa</span></p><div contenteditable="true" id="action-${tabId}" oninput="saveAnalysis('${tabId}', 'action', this.innerHTML)" class="editable-area text-xs text-blue-700 leading-relaxed font-semibold p-3 -ml-2 rounded min-h-[40px] bg-white/70">${txt.action || ''}</div></div>
+            `;
+        }
+
+        function renderLeadsChart() {
+            clearAllCharts(); const ctx = document.getElementById('leadsStackedChart');
+            if(ctx) {
+                const chart = new Chart(ctx, { type: 'bar', data: { labels: filteredData.months, datasets: [ { label: 'Facebook', data: filteredData.marketing.leads.fb, backgroundColor: '#3b82f6' }, { label: 'TikTok', data: filteredData.marketing.leads.tk, backgroundColor: '#1e293b' }, { label: 'Website', data: filteredData.marketing.leads.web, backgroundColor: '#10b981' }, { label: 'Google Maps', data: filteredData.marketing.leads.map, backgroundColor: '#f97316' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { datalabels: { display: true, color: 'white', font:{weight:'bold', size:10}, align: 'center', anchor: 'center', formatter: function(v){ return v>0 ? v.toLocaleString('vi-VN') : ''; } } }, layout: { padding: { top: 35 } }, animation: { duration: 0 } } });
+                currentChartInstances.push(chart);
+            }
+        }
+
+        function renderCompetitorsChart() {
+            clearAllCharts(); let arrEntities = filteredData.entities; 
+            let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
+            let sumAcPrice = 0, sumDcPrice = 0, countAc = 0, countDc = 0, marketP7 = 0, marketP11 = 0, marketP20 = 0, marketP60 = 0, marketP120 = 0;
+
+            const getLastF = (arr) => arr && arr.length > 0 ? arr[arr.length - 1] : 0;
+            const getPrevF = (arr) => arr && arr.length > 1 ? arr[arr.length - 2] : 0;
+
+            let stats = arrEntities.map(ent => {
+                let st = filteredData.stations[ent];
+                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKm: getLastF(st.prKm) };
+                marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.dcMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; marketP7 += obj.p7; marketP11 += obj.p11; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
+                if(obj.prAc > 0) { sumAcPrice += obj.prAc; countAc++; } if(obj.prDc > 0) { sumDcPrice += obj.prDc; countDc++; }
+                return obj;
+            });
+
+            stats.sort((a, b) => b.tot - a.tot); let top10 = stats.slice(0, 10);
+            let avgPrAc = countAc > 0 ? sumAcPrice/countAc : 0; let avgPrDc = countDc > 0 ? sumDcPrice/countDc : 0;
+
+            document.getElementById('avg-price-ac').innerText = Math.round(avgPrAc).toLocaleString('vi-VN') + 'đ'; document.getElementById('avg-price-dc').innerText = Math.round(avgPrDc).toLocaleString('vi-VN') + 'đ'; document.getElementById('latest-total-stations').innerText = marketTot.toLocaleString('vi-VN');
+            document.getElementById('regional-breakdown').innerHTML = `<p class="text-[11px] font-semibold text-emerald-700">Bắc: ${marketAcMB.toLocaleString('vi-VN')} AC / ${marketDcMB.toLocaleString('vi-VN')} DC  |  Trung: ${marketAcMT.toLocaleString('vi-VN')} AC / ${marketDcMT.toLocaleString('vi-VN')} DC  |  Nam: ${marketAcMN.toLocaleString('vi-VN')} AC / ${marketDcMN.toLocaleString('vi-VN')} DC</p>`;
+
+            const tableContainer = document.getElementById('compGrowthTable');
+            if (tableContainer) {
+                let thead = `<thead><tr class="bg-slate-100 border-b border-slate-300"><th class="p-3 font-semibold text-slate-700 rounded-tl-lg">Đơn vị</th><th class="p-3 font-semibold text-slate-700 text-center">Miền Bắc<br><span class="text-xs font-normal">(AC - DC)</span></th><th class="p-3 font-semibold text-slate-700 text-center">Miền Trung<br><span class="text-xs font-normal">(AC - DC)</span></th><th class="p-3 font-semibold text-slate-700 text-center">Miền Nam<br><span class="text-xs font-normal">(AC - DC)</span></th><th class="p-3 font-semibold text-blue-700 text-right">Tổng AC</th><th class="p-3 font-semibold text-orange-700 text-right">Tổng DC</th><th class="p-3 font-semibold text-emerald-700 text-right">Tổng Cộng</th><th class="p-3 font-semibold text-slate-700 text-right rounded-tr-lg">Tăng trưởng</th></tr></thead>`;
+                let tbody = `<tbody>`;
+                stats.forEach(e => {
+                    let isEV1 = (e.name.toUpperCase().includes('EV ONE') || e.name.toUpperCase() === 'EVONE'); let growth = e.tot - e.prevTot; let growthHtml = growth > 0 ? `<span class="text-emerald-500 font-bold"><i class="fa-solid fa-arrow-trend-up"></i> +${growth}</span>` : (growth < 0 ? `<span class="text-red-500 font-bold"><i class="fa-solid fa-arrow-trend-down"></i> ${growth}</span>` : `<span class="text-slate-400">-</span>`);
+                    tbody += `<tr class="border-b border-slate-200 hover:bg-slate-50 transition ${isEV1 ? 'bg-emerald-50/40' : ''}"><td class="p-3 font-bold ${isEV1 ? 'text-emerald-700' : 'text-slate-700'}">${e.name}</td><td class="p-3 text-center text-slate-600">${e.acMB} - ${e.dcMB}</td><td class="p-3 text-center text-slate-600">${e.acMT} - ${e.dcMT}</td><td class="p-3 text-center text-slate-600">${e.acMN} - ${e.dcMN}</td><td class="p-3 text-right font-semibold text-blue-600 bg-blue-50/30">${e.ac.toLocaleString('vi-VN')}</td><td class="p-3 text-right font-semibold text-orange-600 bg-orange-50/30">${e.dc.toLocaleString('vi-VN')}</td><td class="p-3 text-right font-bold text-emerald-600 bg-emerald-50/30 text-lg">${e.tot.toLocaleString('vi-VN')}</td><td class="p-3 text-right bg-slate-50/50">${growthHtml}</td></tr>`;
+                }); tbody += `</tbody>`; tableContainer.innerHTML = thead + tbody;
+            }
+
+            let compLabels = top10.map(e => e.name.substring(0,15));
+            let barChartHeight = Math.max(400, compLabels.length * 40) + 'px';
+            ['wrapper-acdc', 'wrapper-power'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).style.height = barChartHeight });
+
+            document.getElementById('summary-acdc').innerHTML = textAnalysis.competitors.acdc || `<b><i class="fa-solid fa-wand-magic-sparkles"></i> Nhận định AI:</b> Tổng quy mô toàn quốc đạt: <span class="text-blue-600">${marketAc.toLocaleString('vi-VN')} trạm AC</span> và <span class="text-orange-600">${marketDc.toLocaleString('vi-VN')} trạm DC</span>.`;
+            renderChart('compAcDcChart', 'bar', compLabels, [ { label: 'Trạm AC', data: top10.map(e => e.ac), backgroundColor: '#3b82f6' }, { label: 'Trạm DC', data: top10.map(e => e.dc), backgroundColor: '#f97316' } ], true, true); 
+
+            document.getElementById('summary-power').innerHTML = textAnalysis.competitors.power || `<b><i class="fa-solid fa-wand-magic-sparkles"></i> Nhận định AI:</b> Hạ tầng thị trường phân bổ chủ yếu vào các dòng công suất cao.`;
+            renderChart('compPowerChart', 'bar', compLabels, [ { label: '7kW', data: top10.map(e => e.p7), backgroundColor: '#94a3b8' }, { label: '11/22kW', data: top10.map(e => e.p11), backgroundColor: '#3b82f6' }, { label: '20-40kW', data: top10.map(e => e.p20), backgroundColor: '#fcd34d' }, { label: '60-90kW', data: top10.map(e => e.p60), backgroundColor: '#f97316' }, { label: '>120kW', data: top10.map(e => e.p120), backgroundColor: '#ef4444' } ], true, true); 
+
+            document.getElementById('summary-promo').innerHTML = textAnalysis.competitors.promo || `Hiện tại chưa có ghi chú khuyến mãi đặc biệt nào trong chu kỳ này.`;
+            renderChart('compPriceAcChart', 'line', compLabels, [ { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false }, { label: 'Giá Khuyến mãi', data: top10.map(e => e.prKm), borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } ], false, false); 
+            renderChart('compPriceDcChart', 'line', compLabels, [ { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false }, { label: 'Giá Khuyến mãi', data: top10.map(e => e.prKm), borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } ], false, false); 
+        }
+
+        // --- HÀM TẢI DỮ LIỆU ĐÁM MÂY (CLOUD SYNC) ĐÃ FIX ---
+        async function fetchFromGoogleSheet(btnElement, directUrl = null) {
+            let rawUrl = directUrl || document.getElementById('sheetUrlInput').value.trim();
+            if (!rawUrl) { alert("Vui lòng dán link Web App (API)!"); return; }
+            
+            const originalHTML = btnElement ? btnElement.innerHTML : '';
+            if(btnElement) btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải...';
+            
+            try {
+                // 1. Kéo Text Ghi chú
+                try {
+                    // Dùng ký tự nối chuẩn xác (?) hoặc (&)
+                    const noteUrl = rawUrl + (rawUrl.includes('?') ? '&' : '?') + "action=getNotes";
+                    const notesRes = await fetch(noteUrl);
+                    if (notesRes.ok) {
+                        const contentType = notesRes.headers.get("content-type");
+                        if (contentType && contentType.includes("application/json")) {
+                            const cloudNotes = await notesRes.json();
+                            if(cloudNotes && Object.keys(cloudNotes).length > 0 && cloudNotes.overview) {
+                                textAnalysis = cloudNotes; 
+                            }
+                        }
+                    }
+                } catch(e) { console.warn("Lỗi kéo dữ liệu chữ từ cloud", e); }
+
+                // 2. Kéo Data Số liệu
+                const dataRes = await fetch(rawUrl);
+                if (!dataRes.ok) throw new Error("Fetch failed");
+                const text = await dataRes.text();
+
+                // Kiểm tra lỗi nếu link App Script chưa bật Public Anyone
+                if (text.trim().toLowerCase().startsWith('<!doctype') || text.trim().toLowerCase().startsWith('<html')) {
+                    alert("LỖI PHÂN QUYỀN: Link Apps Script của bạn chưa được mở công khai.\\nHãy vào Apps Script -> Deploy -> Manage Deployments -> Chọn 'Anyone' (Bất kỳ ai) ở mục 'Who has access'.");
+                    if(btnElement) btnElement.innerHTML = originalHTML;
+                    return;
+                }
+                
+                if (parseCSV(text)) {
+                    if(!FIXED_API_URL) localStorage.setItem('evone_sheet_url', rawUrl);
+                    updateFilterDropdown();
+                    switchTab(activeTab, null);
+                    
+                    const statusEl = document.getElementById('sync-status');
+                    if (statusEl && btnElement) {
+                        statusEl.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Đồng bộ dữ liệu thành công!';
+                        statusEl.className = 'show success';
+                        setTimeout(() => statusEl.classList.remove('show'), 3000);
+                    }
+                } else {
+                    alert("LỖI DỮ LIỆU: File Google Sheets của bạn không đúng cấu trúc mẫu (Thiếu #MARKETING hoặc #STATIONS).");
+                }
+            } catch (error) { 
+                alert("LỖI KẾT NỐI:\\n" + error.message + "\\nVui lòng kiểm tra lại đường truyền hoặc link Apps Script."); 
+            } finally { if(btnElement) btnElement.innerHTML = originalHTML; }
+        }
+
+        // --- HÀM XỬ LÝ DỮ LIỆU CSV ---
+        function parseCSV(csvText) {
+            try {
+                csvText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const lines = csvText.split('\n').map(l => l.trim()).filter(l => l !== '');
+                if (lines.length < 2) return false;
+
+                const delimiter = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+                let mode = 'NONE'; let headers = { m: [], s: [] }; let mData = [], sData = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    let cols = lines[i].split(delimiter).map(c => c.replace(/"/g, '').trim());
+                    if (cols[0] === '#MARKETING') { mode = 'M_HEAD'; continue; }
+                    if (cols[0] === '#STATIONS') { mode = 'S_HEAD'; continue; }
+                    if (mode === 'M_HEAD') { headers.m = cols.map(c => c.toLowerCase()); mode = 'M_DATA'; continue; }
+                    if (mode === 'S_HEAD') { headers.s = cols.map(c => c.toLowerCase()); mode = 'S_DATA'; continue; }
+                    if (mode === 'M_DATA') { if(cols[0]) mData.push(cols); }
+                    if (mode === 'S_DATA') { if(cols[0]) sData.push(cols); }
+                }
+
+                let newMonths = [];
+                mData.forEach(c => { let ck = c[headers.m.indexOf('chuky')]; if(ck && !newMonths.includes(ck)) newMonths.push(ck); });
+                sData.forEach(c => { let ck = c[headers.s.indexOf('chuky')]; if(ck && !newMonths.includes(ck)) newMonths.push(ck); });
+
+                if (newMonths.length === 0) return false;
+
+                let td = {
+                    months: newMonths, entities: [],
+                    marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[]}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} },
+                    stations: {}
+                };
+
+                const fillZeroes = (obj) => { Object.keys(obj).forEach(k => { if (Array.isArray(obj[k])) obj[k] = new Array(newMonths.length).fill(0); else fillZeroes(obj[k]); }); };
+                fillZeroes(td.marketing);
+                const getVal = (cols, hdrs, name) => { let idx = hdrs.indexOf(name.toLowerCase()); if (idx === -1) return 0; let v = parseFloat(cols[idx]); return isNaN(v) ? 0 : v; };
+
+                mData.forEach(cols => {
+                    let ck = cols[headers.m.indexOf('chuky')]; let mIdx = newMonths.indexOf(ck); if (mIdx === -1) return;
+                    td.marketing.posts.fb[mIdx] = getVal(cols, headers.m, 'fb_posts'); td.marketing.reach.fb[mIdx] = getVal(cols, headers.m, 'fb_reach'); td.marketing.interact.fb[mIdx] = getVal(cols, headers.m, 'fb_interact'); td.marketing.follow.fb[mIdx] = getVal(cols, headers.m, 'fb_follow');
+                    td.marketing.posts.tk[mIdx] = getVal(cols, headers.m, 'tk_posts'); td.marketing.reach.tk[mIdx] = getVal(cols, headers.m, 'tk_reach'); td.marketing.interact.tk[mIdx] = getVal(cols, headers.m, 'tk_interact'); td.marketing.follow.tk[mIdx] = getVal(cols, headers.m, 'tk_follow'); td.marketing.views.tk[mIdx] = getVal(cols, headers.m, 'tk_views');
+                    td.marketing.posts.ig[mIdx] = getVal(cols, headers.m, 'ig_posts'); td.marketing.reach.ig[mIdx] = getVal(cols, headers.m, 'ig_reach'); td.marketing.interact.ig[mIdx] = getVal(cols, headers.m, 'ig_interact'); td.marketing.follow.ig[mIdx] = getVal(cols, headers.m, 'ig_follow');
+                    td.marketing.posts.web[mIdx] = getVal(cols, headers.m, 'web_posts'); td.marketing.webDetail.views[mIdx] = getVal(cols, headers.m, 'web_views'); td.marketing.webDetail.time[mIdx] = getVal(cols, headers.m, 'web_avgtime'); td.marketing.webDetail.bounce[mIdx] = getVal(cols, headers.m, 'web_bounce');
+                    td.marketing.posts.yt[mIdx] = getVal(cols, headers.m, 'yt_posts'); td.marketing.views.yt[mIdx] = getVal(cols, headers.m, 'yt_views'); td.marketing.ytSubs[mIdx] = getVal(cols, headers.m, 'yt_subs');
+                    td.marketing.posts.map[mIdx] = getVal(cols, headers.m, 'map_posts'); td.marketing.mapDetail.clicks[mIdx] = getVal(cols, headers.m, 'map_clicks'); td.marketing.mapDetail.search[mIdx] = getVal(cols, headers.m, 'map_search');
+                    td.marketing.posts.seed[mIdx] = getVal(cols, headers.m, 'seed_posts');
+                    td.marketing.leads.fb[mIdx] = getVal(cols, headers.m, 'lead_fb'); td.marketing.leads.tk[mIdx] = getVal(cols, headers.m, 'lead_tk'); td.marketing.leads.web[mIdx] = getVal(cols, headers.m, 'lead_web'); td.marketing.leads.map[mIdx] = getVal(cols, headers.m, 'lead_map');
+                });
+
+                ['fb', 'tk', 'ig'].forEach(k => { for(let i=1; i<newMonths.length; i++) { if(td.marketing.follow[k][i] === 0 && td.marketing.follow[k][i-1] > 0) td.marketing.follow[k][i] = td.marketing.follow[k][i-1]; } });
+                for(let i=1; i<newMonths.length; i++) { if(td.marketing.ytSubs[i] === 0 && td.marketing.ytSubs[i-1] > 0) td.marketing.ytSubs[i] = td.marketing.ytSubs[i-1]; }
+
+                let stationRaw = {}; 
+                sData.forEach(cols => {
+                    let ck = cols[headers.s.indexOf('chuky')]; let name = cols[headers.s.indexOf('tendonvi')]; if (!ck || !name) return;
+                    if (!td.entities.includes(name)) td.entities.push(name);
+                    if (!stationRaw[name]) stationRaw[name] = {};
+                    stationRaw[name][ck] = {
+                        ac: getVal(cols, headers.s, 'ac'), dc: getVal(cols, headers.s, 'dc'), acMB: getVal(cols, headers.s, 'ac_mb'), dcMB: getVal(cols, headers.s, 'dc_mb'), acMT: getVal(cols, headers.s, 'ac_mt'), dcMT: getVal(cols, headers.s, 'dc_mt'), acMN: getVal(cols, headers.s, 'ac_mn'), dcMN: getVal(cols, headers.s, 'dc_mn'),
+                        p7: getVal(cols, headers.s, 'pow7'), p11: getVal(cols, headers.s, 'pow11'), p20: getVal(cols, headers.s, 'pow20'), p60: getVal(cols, headers.s, 'pow60'), p120: getVal(cols, headers.s, 'pow120'),
+                        prAc: getVal(cols, headers.s, 'pr_ac'), prDc: getVal(cols, headers.s, 'pr_dc'), prKm: getVal(cols, headers.s, 'pr_km')
+                    };
+                });
+
+                td.entities.forEach(ent => {
+                    td.stations[ent] = { ac: new Array(newMonths.length).fill(0), dc: new Array(newMonths.length).fill(0), tot: new Array(newMonths.length).fill(0), acMB: new Array(newMonths.length).fill(0), dcMB: new Array(newMonths.length).fill(0), acMT: new Array(newMonths.length).fill(0), dcMT: new Array(newMonths.length).fill(0), acMN: new Array(newMonths.length).fill(0), dcMN: new Array(newMonths.length).fill(0), p7: new Array(newMonths.length).fill(0), p11: new Array(newMonths.length).fill(0), p20: new Array(newMonths.length).fill(0), p60: new Array(newMonths.length).fill(0), p120: new Array(newMonths.length).fill(0), prAc: new Array(newMonths.length).fill(0), prDc: new Array(newMonths.length).fill(0), prKm: new Array(newMonths.length).fill(0) };
+                    let lastVals = { ac:0, dc:0, acMB:0, dcMB:0, acMT:0, dcMT:0, acMN:0, dcMN:0, p7:0, p11:0, p20:0, p60:0, p120:0, prAc:0, prDc:0, prKm:0 };
+                    newMonths.forEach((m, mIdx) => {
+                        if (stationRaw[ent] && stationRaw[ent][m]) { lastVals = { ...stationRaw[ent][m] }; }
+                        td.stations[ent].ac[mIdx] = lastVals.ac; td.stations[ent].dc[mIdx] = lastVals.dc; td.stations[ent].tot[mIdx] = lastVals.ac + lastVals.dc;
+                        td.stations[ent].acMB[mIdx] = lastVals.acMB; td.stations[ent].dcMB[mIdx] = lastVals.dcMB; td.stations[ent].acMT[mIdx] = lastVals.acMT; td.stations[ent].dcMT[mIdx] = lastVals.dcMT; td.stations[ent].acMN[mIdx] = lastVals.acMN; td.stations[ent].dcMN[mIdx] = lastVals.dcMN;
+                        td.stations[ent].p7[mIdx] = lastVals.p7; td.stations[ent].p11[mIdx] = lastVals.p11; td.stations[ent].p20[mIdx] = lastVals.p20; td.stations[ent].p60[mIdx] = lastVals.p60; td.stations[ent].p120[mIdx] = lastVals.p120;
+                        td.stations[ent].prAc[mIdx] = lastVals.prAc; td.stations[ent].prDc[mIdx] = lastVals.prDc; td.stations[ent].prKm[mIdx] = lastVals.prKm;
+                    });
+                });
+
+                let evIdx = td.entities.findIndex(e => e.toUpperCase().includes('EV ONE') || e.toUpperCase() === 'EVONE');
+                if (evIdx > 0) { let temp = td.entities[0]; td.entities[0] = td.entities[evIdx]; td.entities[evIdx] = temp; }
+
+                parsedData = td;
+                filteredData = JSON.parse(JSON.stringify(parsedData));
+                return true;
+            } catch (error) { return false; }
+        }
+
+        // --- KHỞI TẠO KHI MỞ TRANG TỰ ĐỘNG TẢI THEO LINK GẮN CỨNG ---
+        window.onload = function() {
+            // Lấy URL Hardcode nếu có, không có thì lấy local
+            let activeUrl = (FIXED_API_URL && FIXED_API_URL.includes("script.google.com")) ? FIXED_API_URL : localStorage.getItem('evone_sheet_url');
+            
+            if (activeUrl) {
+                let inputEl = document.getElementById('sheetUrlInput');
+                inputEl.value = activeUrl;
+                
+                // Khóa ô nhập nếu đang dùng link gắn cứng
+                if(FIXED_API_URL.includes("script.google.com")) {
+                    inputEl.readOnly = true;
+                    inputEl.className = "w-full pl-9 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed";
+                    inputEl.value = "Đang kết nối Cloud Data...";
+                }
+
+                // Tự động tải Dữ liệu ngay lập tức
+                let syncBtn = document.getElementById("btn-sync");
+                if(syncBtn) fetchFromGoogleSheet(syncBtn, activeUrl);
+            } else {
+                // Tình huống chưa có Data
+                generateAllInsights(); 
+                updateFilterDropdown();
+                switchTab('news', document.querySelector('.sidebar-item.active'));
+            }
+        };
+    </script>
+</body>
+</html>
