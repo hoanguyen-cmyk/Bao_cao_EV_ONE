@@ -38,15 +38,17 @@
         #sync-status.error { background: #ef4444; }
         
         .hidden.print-title { display: none; }
+        
+        /* Cập nhật CSS hiển thị Logo Đơn vị ở tab Trạm sạc đối thủ */
         .logo-image-area img { 
-    height: 60px !important; 
-    width: 100% !important; 
-    max-width: 140px !important; 
-    object-fit: contain !important; 
-    border-radius: 4px; 
-    display: block; 
-    margin: 0 auto; 
-}
+            height: 60px !important; 
+            width: 100% !important; 
+            max-width: 140px !important; 
+            object-fit: contain !important; 
+            border-radius: 4px; 
+            display: block; 
+            margin: 0 auto; 
+        }
     </style>
 </head>
 <body class="flex flex-col lg:flex-row min-h-screen relative">
@@ -353,7 +355,8 @@
             if(textAnalysis[tab]) { textAnalysis[tab][field] = htmlContent; saveToCloud(); }
         }
 
-        let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[]}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} }, stations: {} };
+        // Cập nhật dữ liệu gốc thêm users và pagesPerSession cho webDetail
+        let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} }, stations: {} };
         let filteredData = JSON.parse(JSON.stringify(parsedData));
 
         function clearAllCharts() { currentChartInstances.forEach(chart => chart.destroy()); currentChartInstances = []; }
@@ -529,7 +532,29 @@
 
             if (['facebook', 'instagram'].includes(tabId)) { let idc = tabId === 'facebook' ? 'fb' : 'ig'; container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts[idc]), 'slate-700') + makeCard('Tiếp Cận', sumArray(mk.reach[idc]), 'emerald-500') + makeCard('Follower', getLast(mk.follow[idc]), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact[idc]), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Số Lượng Bài Viết') + makeCanvasHTML('chart2', 'Lượt Tiếp Cận & Tương Tác'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts[idc], backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [ {label: 'Tiếp Cận', data: mk.reach[idc], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4}, {label: 'Tương Tác', data: mk.interact[idc], borderColor: '#3b82f6', tension: 0.4} ]); }, 50); } 
             else if (tabId === 'tiktok') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts.tk), 'slate-700') + makeCard('Lượt Xem', sumArray(mk.views.tk), 'red-500') + makeCard('Follower', getLast(mk.follow.tk), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact.tk), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Viết') + makeCanvasHTML('chart2', 'Views'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts.tk, backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Views', data: mk.views.tk, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); }, 50); }
-            else if (tabId === 'website') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); let wbd = mk.webDetail; let avgBounce = wbd.bounce.length > 0 ? (sumArray(wbd.bounce) / wbd.bounce.length).toFixed(1) : 0; metricsDiv.innerHTML = makeCard('Bài Viết', sumArray(mk.posts.web), 'slate-700') + makeCard('Truy Cập', sumArray(wbd.views), 'emerald-500') + makeCard('Tỉ Lệ Thoát (Avg)', avgBounce + '%', 'orange-500'); container.innerHTML = makeCanvasHTML('chart1', 'Truy Cập (Pageviews)') + makeCanvasHTML('chart2', 'Thời Gian Ở Lại (Phút)'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Truy cập', data: wbd.views, backgroundColor: '#10b981'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Phút', data: wbd.time, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4}]); }, 50); }
+            
+            // Cập nhật Tab Website với Users và Pages Per Session
+            else if (tabId === 'website') { 
+                container.classList.add('grid-cols-1', 'lg:grid-cols-2'); 
+                let wbd = mk.webDetail; 
+                let avgBounce = wbd.bounce.length > 0 ? (sumArray(wbd.bounce) / wbd.bounce.length).toFixed(1) : 0; 
+                let avgPages = wbd.pagesPerSession.length > 0 ? (sumArray(wbd.pagesPerSession) / wbd.pagesPerSession.length).toFixed(1) : 0;
+                
+                metricsDiv.innerHTML = makeCard('Người Truy Cập', sumArray(wbd.users), 'blue-500') + makeCard('Pageviews', sumArray(wbd.views), 'emerald-500') + makeCard('Số Trang/Phiên (Avg)', avgPages, 'indigo-500') + makeCard('Tỉ Lệ Thoát (Avg)', avgBounce + '%', 'orange-500'); 
+                container.innerHTML = makeCanvasHTML('chart1', 'Lượng Người Truy Cập & Lượt Xem (Pageviews)') + makeCanvasHTML('chart2', 'Tương tác: Thời Gian Ở Lại & Số Trang/Phiên'); 
+                
+                setTimeout(() => { 
+                    renderChart('chart1', 'bar', filteredData.months, [
+                        {label: 'Người Truy Cập', data: wbd.users, backgroundColor: '#3b82f6'},
+                        {label: 'Pageviews', type: 'line', data: wbd.views, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3}
+                    ]); 
+                    renderChart('chart2', 'line', filteredData.months, [
+                        {label: 'Thời Gian (Phút)', data: wbd.time, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4},
+                        {label: 'Số Trang/Phiên', type: 'line', data: wbd.pagesPerSession, borderColor: '#6366f1', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.3}
+                    ]); 
+                }, 50); 
+            }
+
             else if (tabId === 'youtube') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Video', sumArray(mk.posts.yt), 'slate-700') + makeCard('Tổng Xem', sumArray(mk.views.yt), 'red-500') + makeCard('Subscribe Tích Lũy', getLast(mk.ytSubs), 'pink-500'); container.innerHTML = makeCanvasHTML('chart1', 'Views') + makeCanvasHTML('chart2', 'Subscribe'); setTimeout(() => { renderChart('chart1', 'line', filteredData.months, [{label: 'Views', data: mk.views.yt, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); renderChart('chart2', 'bar', filteredData.months, [{label: 'Subscribe', data: mk.ytSubs, backgroundColor: '#ec4899'}]); }, 50); }
             else if (tabId === 'maps') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Post', sumArray(mk.posts.map), 'slate-700') + makeCard('Clicks', sumArray(mk.mapDetail.clicks), 'orange-500') + makeCard('Tìm Kiếm', sumArray(mk.mapDetail.search), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Lượt Nhấp & Tìm Kiếm'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [ {label: 'Lượt Nhấp', data: mk.mapDetail.clicks, backgroundColor: '#f97316'}, {label: 'Tìm Kiếm', data: mk.mapDetail.search, backgroundColor: '#3b82f6'} ]); }, 50); }
             else if (tabId === 'seeding') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Bài Seeding', sumArray(mk.posts.seed), 'indigo-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Đăng Seeding'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Đăng', data: mk.posts.seed, backgroundColor: '#6366f1'}]); }, 50); }
@@ -683,7 +708,7 @@
 
                 let td = {
                     months: newMonths, entities: [],
-                    marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[]}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} },
+                    marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{views:[],time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} },
                     stations: {}
                 };
 
@@ -691,12 +716,19 @@
                 fillZeroes(td.marketing);
                 const getVal = (cols, hdrs, name) => { let idx = hdrs.indexOf(name.toLowerCase()); if (idx === -1) return 0; let v = parseFloat(cols[idx]); return isNaN(v) ? 0 : v; };
 
+                // Cập nhật hàm lấy dữ liệu, thêm web_users và web_pages_session
                 mData.forEach(cols => {
                     let ck = cols[headers.m.indexOf('chuky')]; let mIdx = newMonths.indexOf(ck); if (mIdx === -1) return;
                     td.marketing.posts.fb[mIdx] = getVal(cols, headers.m, 'fb_posts'); td.marketing.reach.fb[mIdx] = getVal(cols, headers.m, 'fb_reach'); td.marketing.interact.fb[mIdx] = getVal(cols, headers.m, 'fb_interact'); td.marketing.follow.fb[mIdx] = getVal(cols, headers.m, 'fb_follow');
                     td.marketing.posts.tk[mIdx] = getVal(cols, headers.m, 'tk_posts'); td.marketing.reach.tk[mIdx] = getVal(cols, headers.m, 'tk_reach'); td.marketing.interact.tk[mIdx] = getVal(cols, headers.m, 'tk_interact'); td.marketing.follow.tk[mIdx] = getVal(cols, headers.m, 'tk_follow'); td.marketing.views.tk[mIdx] = getVal(cols, headers.m, 'tk_views');
                     td.marketing.posts.ig[mIdx] = getVal(cols, headers.m, 'ig_posts'); td.marketing.reach.ig[mIdx] = getVal(cols, headers.m, 'ig_reach'); td.marketing.interact.ig[mIdx] = getVal(cols, headers.m, 'ig_interact'); td.marketing.follow.ig[mIdx] = getVal(cols, headers.m, 'ig_follow');
-                    td.marketing.posts.web[mIdx] = getVal(cols, headers.m, 'web_posts'); td.marketing.webDetail.views[mIdx] = getVal(cols, headers.m, 'web_views'); td.marketing.webDetail.time[mIdx] = getVal(cols, headers.m, 'web_avgtime'); td.marketing.webDetail.bounce[mIdx] = getVal(cols, headers.m, 'web_bounce');
+                    td.marketing.posts.web[mIdx] = getVal(cols, headers.m, 'web_posts'); 
+                    td.marketing.webDetail.views[mIdx] = getVal(cols, headers.m, 'web_views'); 
+                    td.marketing.webDetail.time[mIdx] = getVal(cols, headers.m, 'web_avgtime'); 
+                    td.marketing.webDetail.bounce[mIdx] = getVal(cols, headers.m, 'web_bounce');
+                    td.marketing.webDetail.users[mIdx] = getVal(cols, headers.m, 'web_users'); 
+                    td.marketing.webDetail.pagesPerSession[mIdx] = getVal(cols, headers.m, 'web_pages_session');
+                    
                     td.marketing.posts.yt[mIdx] = getVal(cols, headers.m, 'yt_posts'); td.marketing.views.yt[mIdx] = getVal(cols, headers.m, 'yt_views'); td.marketing.ytSubs[mIdx] = getVal(cols, headers.m, 'yt_subs');
                     td.marketing.posts.map[mIdx] = getVal(cols, headers.m, 'map_posts'); td.marketing.mapDetail.clicks[mIdx] = getVal(cols, headers.m, 'map_clicks'); td.marketing.mapDetail.search[mIdx] = getVal(cols, headers.m, 'map_search');
                     td.marketing.posts.seed[mIdx] = getVal(cols, headers.m, 'seed_posts');
@@ -795,7 +827,7 @@
                             
                             <div class="flex flex-col flex-grow">
                                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1"><i class="fa-regular fa-image mr-1"></i> Logo</p>
-                                <div ${editableAttr} class="editable-area rounded-lg min-h-[70px] logo-image-area bg-slate-50 border border-dashed border-slate-300 hover:border-emerald-400 flex items-center justify-center transition p-2 w-full overflow-hidden" oninput="updateCompetitorUnit('${unit.id}', 'logo', this.innerHTML)">
+                                <div ${editableAttr} class="editable-area rounded-lg h-[80px] logo-image-area bg-slate-50 border border-dashed border-slate-300 hover:border-emerald-400 flex items-center justify-center transition p-2 w-full overflow-hidden" oninput="updateCompetitorUnit('${unit.id}', 'logo', this.innerHTML)">
                                     ${unit.logo || '<span class="text-slate-400 text-xs italic text-center">Copy & Paste ảnh vào đây...</span>'}
                                 </div>
                             </div>
@@ -830,7 +862,7 @@
 
         function deleteCompetitorUnit(id) {
             if (!isLoggedIn) return;
-            if (confirm('Bạn có chắc chắn muốn xóa thông tin đơn vị này?')) {
+            if (confirm('Bạn có chắc chắn muốn xóa thông vị này?')) {
                 textAnalysis.competitors.unitsList = textAnalysis.competitors.unitsList.filter(u => u.id !== id);
                 saveToCloud();
                 renderCompetitorUnits();
