@@ -166,11 +166,29 @@
         </div>
 
         <div id="competitors" class="tab-content space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="card p-6 border-b-4 border-slate-700"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Trung bình Giá AC Toàn TT</p><h3 class="text-2xl font-bold mt-2 text-slate-700" id="avg-price-ac">0đ / kWh</h3></div>
-                <div class="card p-6 border-b-4 border-orange-500"><p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Trung bình Giá DC Toàn TT</p><h3 class="text-2xl font-bold mt-2 text-orange-600" id="avg-price-dc">0đ / kWh</h3></div>
-                <div class="card p-6 border-b-4 border-emerald-500 bg-emerald-500/10 flex flex-col justify-center"><p class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Tổng Trạm Toàn Thị Trường</p><h3 class="text-3xl font-black mt-1 text-emerald-600" id="latest-total-stations">0</h3><div class="mt-3 pt-3 border-t border-emerald-200/50" id="regional-breakdown"></div></div>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="card p-4 border-b-4 border-emerald-500 bg-emerald-500/10 flex flex-col justify-center col-span-2 md:col-span-1">
+                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Tổng Trạm</p>
+                    <h3 class="text-3xl font-black mt-1 text-emerald-600" id="latest-total-stations">0</h3>
+                </div>
+                <div class="card p-4 border-b-4 border-blue-500 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng Trạm AC</p>
+                    <h3 class="text-2xl font-bold mt-1 text-blue-600" id="latest-total-ac">0</h3>
+                </div>
+                <div class="card p-4 border-b-4 border-orange-500 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng Trạm DC</p>
+                    <h3 class="text-2xl font-bold mt-1 text-orange-600" id="latest-total-dc">0</h3>
+                </div>
+                <div class="card p-4 border-b-4 border-slate-700 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giá TB AC</p>
+                    <h3 class="text-xl font-bold mt-1 text-slate-700" id="avg-price-ac">0đ</h3>
+                </div>
+                <div class="card p-4 border-b-4 border-red-500 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giá TB DC</p>
+                    <h3 class="text-xl font-bold mt-1 text-red-600" id="avg-price-dc">0đ</h3>
+                </div>
             </div>
+            <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-center -mt-4" id="regional-breakdown"></div>
             
             <div class="grid grid-cols-1 gap-8">
                 <div class="card p-6 flex flex-col">
@@ -186,7 +204,7 @@
                     </div>
                 </div>
                 <div class="card p-6 flex flex-col">
-                    <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-table-list mr-2 text-blue-500"></i> Thống kê Trạm sạc các đơn vị (Kỳ hiện tại)</h4>
+                    <h4 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-table-list mr-2 text-blue-500"></i> Thống kê Số lượng Trạm sạc các đơn vị (Kỳ hiện tại)</h4>
                     <div class="overflow-x-auto w-full rounded-xl border border-slate-200">
                         <table class="w-full text-left border-collapse text-sm min-w-[800px]" id="compGrowthTable"></table>
                     </div>
@@ -394,7 +412,7 @@
             channels.forEach(ch => {
                 if(!textAnalysis[ch].pros) textAnalysis[ch].pros = `Xu hướng tăng trưởng duy trì tốt so với kỳ trước.<br>Chỉ số tương tác ở mức ổn định và đều đặn.`;
                 if(!textAnalysis[ch].cons) textAnalysis[ch].cons = `Chưa có nội dung thực sự bứt phá (Viral) để lan truyền mạnh.<br>Cần tối ưu chi phí thu hút khách hàng.`;
-                if(!textAnalysis[ch].action) textAnalysis[ch].action = `Tập trung sản xuất nội dung ngắn giải đáp thắc mắc về sạc xe điện.<br>Theo dõi chặt chẽ và điều chỉnh thông điệp kêu gọi hành động (CTA).`;
+                if(!textAnalysis[ch].action) textAnalysis[ch].action = `Tập trung sản xuất nội dung ngắn giải đáp thắc mắc về sạc xe điện.<br>Theo dõi chặtạchẽ và điều chỉnh thông điệp kêu gọi hành động (CTA).`;
             });
             // Chỉ lưu khi admin đăng nhập
             if(isLoggedIn) saveToCloud();
@@ -597,6 +615,7 @@
             }
         }
 
+        // BIỂU ĐỒ ĐỐI THỦ: Nổi bật điểm giá Khuyến mãi & Cập nhật Tổng Trạm
         function renderCompetitorsChart() {
             clearAllCharts(); let arrEntities = filteredData.entities; 
             let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
@@ -629,8 +648,14 @@
             stats.sort((a, b) => b.tot - a.tot); let top10 = stats.slice(0, 10);
             let avgPrAc = countAc > 0 ? sumAcPrice/countAc : 0; let avgPrDc = countDc > 0 ? sumDcPrice/countDc : 0;
 
-            document.getElementById('avg-price-ac').innerText = Math.round(avgPrAc).toLocaleString('vi-VN') + 'đ'; document.getElementById('avg-price-dc').innerText = Math.round(avgPrDc).toLocaleString('vi-VN') + 'đ'; document.getElementById('latest-total-stations').innerText = marketTot.toLocaleString('vi-VN');
-            document.getElementById('regional-breakdown').innerHTML = `<p class="text-[11px] font-semibold text-emerald-700">Bắc: ${marketAcMB.toLocaleString('vi-VN')} AC / ${marketDcMB.toLocaleString('vi-VN')} DC  |  Trung: ${marketAcMT.toLocaleString('vi-VN')} AC / ${marketDcMT.toLocaleString('vi-VN')} DC  |  Nam: ${marketAcMN.toLocaleString('vi-VN')} AC / ${marketDcMN.toLocaleString('vi-VN')} DC</p>`;
+            // Cập nhật lên 5 bảng thông số tổng quan đầu trang
+            document.getElementById('latest-total-stations').innerText = marketTot.toLocaleString('vi-VN');
+            if (document.getElementById('latest-total-ac')) document.getElementById('latest-total-ac').innerText = marketAc.toLocaleString('vi-VN');
+            if (document.getElementById('latest-total-dc')) document.getElementById('latest-total-dc').innerText = marketDc.toLocaleString('vi-VN');
+            document.getElementById('avg-price-ac').innerText = Math.round(avgPrAc).toLocaleString('vi-VN') + 'đ'; 
+            document.getElementById('avg-price-dc').innerText = Math.round(avgPrDc).toLocaleString('vi-VN') + 'đ'; 
+            
+            document.getElementById('regional-breakdown').innerHTML = `<p class="text-xs font-semibold text-emerald-800">Cơ cấu Trạm sạc Vùng miền (Toàn TT) &nbsp;➜&nbsp; <span class="text-emerald-600">Bắc:</span> ${marketAcMB.toLocaleString('vi-VN')} AC / ${marketDcMB.toLocaleString('vi-VN')} DC &nbsp;|&nbsp; <span class="text-emerald-600">Trung:</span> ${marketAcMT.toLocaleString('vi-VN')} AC / ${marketDcMT.toLocaleString('vi-VN')} DC &nbsp;|&nbsp; <span class="text-emerald-600">Nam:</span> ${marketAcMN.toLocaleString('vi-VN')} AC / ${marketDcMN.toLocaleString('vi-VN')} DC</p>`;
 
             const tableContainer = document.getElementById('compGrowthTable');
             if (tableContainer) {
@@ -713,12 +738,14 @@
             let dataPrKmac = top10.map(e => e.prKmac > 0 ? e.prKmac : null);
             let dataPrKmdc = top10.map(e => e.prKmdc > 0 ? e.prKmdc : null);
 
+            // Vẽ bảng giá AC (Line Giá gốc vẽ trước, Chấm Khuyến mãi vẽ sau cùng đè lên trên)
             renderChart('compPriceAcChart', 'line', compLabels, [ 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} },
                 { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false, pointRadius: 4 }, 
                 { label: 'Khuyến mãi AC', data: dataPrKmac, type: 'line', showLine: false, pointStyle: 'circle', pointRadius: 8, pointHoverRadius: 10, pointBackgroundColor: '#10b981', pointBorderColor: '#ffffff', pointBorderWidth: 2, backgroundColor: '#10b981', datalabels: { display: true, color: '#059669', align: 'bottom', anchor: 'start', font: {weight: 'bold', size: 11}, formatter: function(v){ return v ? 'KM: ' + v.toLocaleString('vi-VN') + 'đ' : ''; } } } 
             ], false, false); 
             
+            // Vẽ bảng giá DC (Line Giá gốc vẽ trước, Chấm Khuyến mãi vẽ sau cùng đè lên trên)
             renderChart('compPriceDcChart', 'line', compLabels, [ 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} },
                 { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false, pointRadius: 4 }, 
