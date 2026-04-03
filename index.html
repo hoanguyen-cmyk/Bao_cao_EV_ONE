@@ -594,7 +594,7 @@
             }
         }
 
-        // Cập nhật phân tích Khuyến mãi riêng AC và DC
+        // Cập nhật biểu đồ Khuyến mãi để hiện rõ dấu chấm (scatter dot) và text
         function renderCompetitorsChart() {
             clearAllCharts(); let arrEntities = filteredData.entities; 
             let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
@@ -644,19 +644,19 @@
             document.getElementById('summary-promo').innerHTML = textAnalysis.competitors.promo || `Hiện tại chưa có ghi chú khuyến mãi đặc biệt nào trong chu kỳ này.`;
             document.getElementById('summary-promo').setAttribute('contenteditable', isLoggedIn ? 'true' : 'false');
 
-            // Tính năng ẩn điểm trên biểu đồ nếu giá trị khuyến mãi = 0 (tránh đường kẻ cắm xuống 0 đồng)
+            // Tính năng hiển thị DẤU CHẤM giá khuyến mãi nổi bật
             let dataPrKmac = top10.map(e => e.prKmac > 0 ? e.prKmac : null);
             let dataPrKmdc = top10.map(e => e.prKmdc > 0 ? e.prKmdc : null);
 
             renderChart('compPriceAcChart', 'line', compLabels, [ 
-                { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false }, 
-                { label: 'Khuyến mãi AC', data: dataPrKmac, borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, 
+                { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false, pointRadius: 4 }, 
+                { label: 'Khuyến mãi AC', data: dataPrKmac, type: 'line', showLine: false, pointStyle: 'circle', pointRadius: 7, pointHoverRadius: 9, backgroundColor: '#10b981', borderColor: '#ffffff', borderWidth: 2, datalabels: { display: true, color: '#059669', align: 'bottom', anchor: 'start', font: {weight: 'bold', size: 11}, formatter: function(v){ return v ? 'KM: ' + v.toLocaleString('vi-VN') + 'đ' : ''; } } }, 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } 
             ], false, false); 
             
             renderChart('compPriceDcChart', 'line', compLabels, [ 
-                { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false }, 
-                { label: 'Khuyến mãi DC', data: dataPrKmdc, borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, 
+                { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false, pointRadius: 4 }, 
+                { label: 'Khuyến mãi DC', data: dataPrKmdc, type: 'line', showLine: false, pointStyle: 'circle', pointRadius: 7, pointHoverRadius: 9, backgroundColor: '#10b981', borderColor: '#ffffff', borderWidth: 2, datalabels: { display: true, color: '#059669', align: 'bottom', anchor: 'start', font: {weight: 'bold', size: 11}, formatter: function(v){ return v ? 'KM: ' + v.toLocaleString('vi-VN') + 'đ' : ''; } } }, 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } 
             ], false, false); 
         }
