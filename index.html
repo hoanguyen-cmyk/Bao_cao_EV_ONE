@@ -355,8 +355,8 @@
             if(textAnalysis[tab]) { textAnalysis[tab][field] = htmlContent; saveToCloud(); }
         }
 
-        // Đã xóa views khỏi cấu trúc dữ liệu webDetail
-        let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} }, stations: {} };
+        // Cập nhật cấu trúc leads: thêm hotline, zalo, other và bỏ map (khỏi leads)
+        let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],hotline:[],zalo:[],other:[]} }, stations: {} };
         let filteredData = JSON.parse(JSON.stringify(parsedData));
 
         function clearAllCharts() { currentChartInstances.forEach(chart => chart.destroy()); currentChartInstances = []; }
@@ -385,7 +385,8 @@
 
         function generateAllInsights() {
             let fd = filteredData.marketing;
-            let totalLeads = sumArray(fd.leads.fb) + sumArray(fd.leads.tk) + sumArray(fd.leads.web) + sumArray(fd.leads.map);
+            // Cập nhật tính tổng leads với các nguồn mới
+            let totalLeads = sumArray(fd.leads.fb) + sumArray(fd.leads.tk) + sumArray(fd.leads.web) + sumArray(fd.leads.hotline) + sumArray(fd.leads.zalo) + sumArray(fd.leads.other);
             if(!textAnalysis.overview.pros) textAnalysis.overview.pros = `Tổng mức độ tiếp cận đa kênh duy trì ổn định.<br>Hệ thống tạo ra <b>${totalLeads.toLocaleString('vi-VN')} leads</b> tổng cộng, phễu marketing đang hoạt động tốt.`;
             if(!textAnalysis.overview.cons) textAnalysis.overview.cons = `Tốc độ tăng trưởng ở một số nền tảng cốt lõi còn chậm.<br>Cần theo dõi thêm tỷ lệ chuyển đổi Lead thực tế.`;
             const channels = ['facebook', 'tiktok', 'instagram', 'website', 'youtube', 'maps', 'seeding'];
@@ -516,7 +517,8 @@
             let tPosts = sumArray(mk.posts.fb) + sumArray(mk.posts.tk) + sumArray(mk.posts.ig) + sumArray(mk.posts.web) + sumArray(mk.posts.yt) + sumArray(mk.posts.map) + sumArray(mk.posts.seed);
             let tReach = sumArray(mk.reach.fb) + sumArray(mk.reach.tk) + sumArray(mk.reach.ig);
             let tFollowers = sumArray(mk.follow.fb) + sumArray(mk.follow.tk) + sumArray(mk.follow.ig);
-            let tLeads = sumArray(mk.leads.fb) + sumArray(mk.leads.tk) + sumArray(mk.leads.web) + sumArray(mk.leads.map);
+            // Cập nhật công thức lấy tổng leads hiển thị ở Overview
+            let tLeads = sumArray(mk.leads.fb) + sumArray(mk.leads.tk) + sumArray(mk.leads.web) + sumArray(mk.leads.hotline) + sumArray(mk.leads.zalo) + sumArray(mk.leads.other);
             document.getElementById('total-posts').innerText = tPosts.toLocaleString('vi-VN'); document.getElementById('total-reach').innerText = tReach.toLocaleString('vi-VN'); document.getElementById('total-followers').innerText = tFollowers.toLocaleString('vi-VN'); document.getElementById('total-leads').innerText = tLeads.toLocaleString('vi-VN');
 
             renderChart('stackedPostChart', 'bar', filteredData.months, [ { label: 'Facebook', data: mk.posts.fb, backgroundColor: '#3b82f6' }, { label: 'TikTok', data: mk.posts.tk, backgroundColor: '#1e293b' }, { label: 'Instagram', data: mk.posts.ig, backgroundColor: '#ec4899' }, { label: 'Website', data: mk.posts.web, backgroundColor: '#10b981' }, { label: 'Seeding', data: mk.posts.seed, backgroundColor: '#6366f1' } ], false, true); 
@@ -533,7 +535,6 @@
             if (['facebook', 'instagram'].includes(tabId)) { let idc = tabId === 'facebook' ? 'fb' : 'ig'; container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts[idc]), 'slate-700') + makeCard('Tiếp Cận', sumArray(mk.reach[idc]), 'emerald-500') + makeCard('Follower', getLast(mk.follow[idc]), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact[idc]), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Số Lượng Bài Viết') + makeCanvasHTML('chart2', 'Lượt Tiếp Cận & Tương Tác'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts[idc], backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [ {label: 'Tiếp Cận', data: mk.reach[idc], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4}, {label: 'Tương Tác', data: mk.interact[idc], borderColor: '#3b82f6', tension: 0.4} ]); }, 50); } 
             else if (tabId === 'tiktok') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts.tk), 'slate-700') + makeCard('Lượt Xem', sumArray(mk.views.tk), 'red-500') + makeCard('Follower', getLast(mk.follow.tk), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact.tk), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Viết') + makeCanvasHTML('chart2', 'Views'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts.tk, backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Views', data: mk.views.tk, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); }, 50); }
             
-            // Cập nhật Tab Website: Thay Pageviews bằng Thời gian trung bình
             else if (tabId === 'website') { 
                 container.classList.add('grid-cols-1', 'lg:grid-cols-2'); 
                 let wbd = mk.webDetail; 
@@ -569,10 +570,32 @@
             `;
         }
 
+        // Cập nhật biểu đồ Khách hàng Leads
         function renderLeadsChart() {
             clearAllCharts(); const ctx = document.getElementById('leadsStackedChart');
             if(ctx) {
-                const chart = new Chart(ctx, { type: 'bar', data: { labels: filteredData.months, datasets: [ { label: 'Facebook', data: filteredData.marketing.leads.fb, backgroundColor: '#3b82f6' }, { label: 'TikTok', data: filteredData.marketing.leads.tk, backgroundColor: '#1e293b' }, { label: 'Website', data: filteredData.marketing.leads.web, backgroundColor: '#10b981' }, { label: 'Google Maps', data: filteredData.marketing.leads.map, backgroundColor: '#f97316' } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { datalabels: { display: true, color: 'white', font:{weight:'bold', size:10}, align: 'center', anchor: 'center', formatter: function(v){ return v>0 ? v.toLocaleString('vi-VN') : ''; } } }, layout: { padding: { top: 35 } }, animation: { duration: 0 } } });
+                const chart = new Chart(ctx, { 
+                    type: 'bar', 
+                    data: { 
+                        labels: filteredData.months, 
+                        datasets: [ 
+                            { label: 'Facebook', data: filteredData.marketing.leads.fb, backgroundColor: '#3b82f6' }, 
+                            { label: 'TikTok', data: filteredData.marketing.leads.tk, backgroundColor: '#1e293b' }, 
+                            { label: 'Website', data: filteredData.marketing.leads.web, backgroundColor: '#10b981' }, 
+                            { label: 'Hotline', data: filteredData.marketing.leads.hotline, backgroundColor: '#ef4444' },
+                            { label: 'Zalo OA', data: filteredData.marketing.leads.zalo, backgroundColor: '#0ea5e9' },
+                            { label: 'Khác', data: filteredData.marketing.leads.other, backgroundColor: '#94a3b8' }
+                        ] 
+                    }, 
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        scales: { x: { stacked: true }, y: { stacked: true } }, 
+                        plugins: { datalabels: { display: true, color: 'white', font:{weight:'bold', size:10}, align: 'center', anchor: 'center', formatter: function(v){ return v>0 ? v.toLocaleString('vi-VN') : ''; } } }, 
+                        layout: { padding: { top: 35 } }, 
+                        animation: { duration: 0 } 
+                    } 
+                });
                 currentChartInstances.push(chart);
             }
         }
@@ -708,7 +731,7 @@
 
                 let td = {
                     months: newMonths, entities: [],
-                    marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],map:[]} },
+                    marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],hotline:[],zalo:[],other:[]} },
                     stations: {}
                 };
 
@@ -716,7 +739,7 @@
                 fillZeroes(td.marketing);
                 const getVal = (cols, hdrs, name) => { let idx = hdrs.indexOf(name.toLowerCase()); if (idx === -1) return 0; let v = parseFloat(cols[idx]); return isNaN(v) ? 0 : v; };
 
-                // Đã loại bỏ logic lấy web_views
+                // Cập nhật hàm lấy dữ liệu Lead
                 mData.forEach(cols => {
                     let ck = cols[headers.m.indexOf('chuky')]; let mIdx = newMonths.indexOf(ck); if (mIdx === -1) return;
                     td.marketing.posts.fb[mIdx] = getVal(cols, headers.m, 'fb_posts'); td.marketing.reach.fb[mIdx] = getVal(cols, headers.m, 'fb_reach'); td.marketing.interact.fb[mIdx] = getVal(cols, headers.m, 'fb_interact'); td.marketing.follow.fb[mIdx] = getVal(cols, headers.m, 'fb_follow');
@@ -732,7 +755,13 @@
                     td.marketing.posts.yt[mIdx] = getVal(cols, headers.m, 'yt_posts'); td.marketing.views.yt[mIdx] = getVal(cols, headers.m, 'yt_views'); td.marketing.ytSubs[mIdx] = getVal(cols, headers.m, 'yt_subs');
                     td.marketing.posts.map[mIdx] = getVal(cols, headers.m, 'map_posts'); td.marketing.mapDetail.clicks[mIdx] = getVal(cols, headers.m, 'map_clicks'); td.marketing.mapDetail.search[mIdx] = getVal(cols, headers.m, 'map_search');
                     td.marketing.posts.seed[mIdx] = getVal(cols, headers.m, 'seed_posts');
-                    td.marketing.leads.fb[mIdx] = getVal(cols, headers.m, 'lead_fb'); td.marketing.leads.tk[mIdx] = getVal(cols, headers.m, 'lead_tk'); td.marketing.leads.web[mIdx] = getVal(cols, headers.m, 'lead_web'); td.marketing.leads.map[mIdx] = getVal(cols, headers.m, 'lead_map');
+                    
+                    td.marketing.leads.fb[mIdx] = getVal(cols, headers.m, 'lead_fb'); 
+                    td.marketing.leads.tk[mIdx] = getVal(cols, headers.m, 'lead_tk'); 
+                    td.marketing.leads.web[mIdx] = getVal(cols, headers.m, 'lead_web'); 
+                    td.marketing.leads.hotline[mIdx] = getVal(cols, headers.m, 'lead_hotline');
+                    td.marketing.leads.zalo[mIdx] = getVal(cols, headers.m, 'lead_zalo');
+                    td.marketing.leads.other[mIdx] = getVal(cols, headers.m, 'lead_other');
                 });
 
                 ['fb', 'tk', 'ig'].forEach(k => { for(let i=1; i<newMonths.length; i++) { if(td.marketing.follow[k][i] === 0 && td.marketing.follow[k][i-1] > 0) td.marketing.follow[k][i] = td.marketing.follow[k][i-1]; } });
