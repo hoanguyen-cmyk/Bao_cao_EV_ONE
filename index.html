@@ -597,7 +597,6 @@
             }
         }
 
-        // Cập nhật Cột Thống Kê Công Suất & Hiển thị tổng
         function renderCompetitorsChart() {
             clearAllCharts(); let arrEntities = filteredData.entities; 
             let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
@@ -608,8 +607,21 @@
 
             let stats = arrEntities.map(ent => {
                 let st = filteredData.stations[ent];
-                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p22: getLastF(st.p22), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKmac: getLastF(st.prKmac), prKmdc: getLastF(st.prKmdc) };
-                marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.acMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; marketP7 += obj.p7; marketP11 += obj.p11; marketP22 += obj.p22; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
+                let obj = { 
+                    name: ent, 
+                    ac: getLastF(st.ac), 
+                    dc: getLastF(st.dc), 
+                    tot: getLastF(st.tot), 
+                    prevTot: getPrevF(st.tot), 
+                    acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), 
+                    p7: getLastF(st.p7), p11: getLastF(st.p11), p22: getLastF(st.p22), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), 
+                    prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKmac: getLastF(st.prKmac), prKmdc: getLastF(st.prKmdc) 
+                };
+                
+                marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; 
+                marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.dcMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; 
+                marketP7 += obj.p7; marketP11 += obj.p11; marketP22 += obj.p22; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
+                
                 if(obj.prAc > 0) { sumAcPrice += obj.prAc; countAc++; } if(obj.prDc > 0) { sumDcPrice += obj.prDc; countDc++; }
                 return obj;
             });
@@ -639,11 +651,14 @@
 
             renderChart('compAcDcChart', 'bar', compLabels, [ { label: 'Trạm AC', data: top10.map(e => e.ac), backgroundColor: '#3b82f6' }, { label: 'Trạm DC', data: top10.map(e => e.dc), backgroundColor: '#f97316' } ], true, true); 
 
-            // Cập nhật Thanh thống kê tổng thị trường (Power Stats Row)
+            // Tính tổng Trụ riêng cho phần hiển thị công suất
+            let totalPlugsAc = marketP7 + marketP11 + marketP22;
+            let totalPlugsDc = marketP20 + marketP60 + marketP120;
+
             let powerStatsHtml = `
                 <div class="px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center min-w-[80px] flex-grow">
-                    <span class="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Tổng AC</span>
-                    <span class="text-lg font-black text-blue-700">${marketAc.toLocaleString('vi-VN')}</span>
+                    <span class="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Tổng Trụ AC</span>
+                    <span class="text-lg font-black text-blue-700">${totalPlugsAc.toLocaleString('vi-VN')}</span>
                 </div>
                 <div class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center min-w-[80px] flex-grow">
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">AC 7kW</span>
@@ -661,8 +676,8 @@
                 <div class="w-px bg-slate-200 hidden lg:block mx-1"></div>
                 
                 <div class="px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg flex flex-col items-center justify-center min-w-[80px] flex-grow">
-                    <span class="text-[10px] text-orange-500 font-bold uppercase tracking-wider">Tổng DC</span>
-                    <span class="text-lg font-black text-orange-700">${marketDc.toLocaleString('vi-VN')}</span>
+                    <span class="text-[10px] text-orange-500 font-bold uppercase tracking-wider">Tổng Trụ DC</span>
+                    <span class="text-lg font-black text-orange-700">${totalPlugsDc.toLocaleString('vi-VN')}</span>
                 </div>
                 <div class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center min-w-[80px] flex-grow">
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">DC 20-40kW</span>
@@ -683,7 +698,6 @@
             document.getElementById('summary-power').innerHTML = textAnalysis.competitors.power || `<b><i class="fa-solid fa-wand-magic-sparkles"></i> Nhận định AI:</b> Hạ tầng thị trường phân bổ chủ yếu vào các dòng công suất cao.`;
             document.getElementById('summary-power').setAttribute('contenteditable', isLoggedIn ? 'true' : 'false');
             
-            // Vẽ biểu đồ 6 nhãn công suất
             renderChart('compPowerChart', 'bar', compLabels, [ 
                 { label: 'Trụ AC 7kW', data: top10.map(e => e.p7), backgroundColor: '#94a3b8' }, 
                 { label: 'Trụ AC 11kW', data: top10.map(e => e.p11), backgroundColor: '#3b82f6' }, 
