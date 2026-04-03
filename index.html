@@ -355,7 +355,6 @@
             if(textAnalysis[tab]) { textAnalysis[tab][field] = htmlContent; saveToCloud(); }
         }
 
-        // Cập nhật cấu trúc leads: thêm hotline, zalo, other và bỏ map (khỏi leads)
         let parsedData = { months: [], entities: [], marketing: { posts:{fb:[],tk:[],ig:[],web:[],yt:[],map:[],seed:[]}, reach:{fb:[],tk:[],ig:[]}, interact:{fb:[],tk:[],ig:[]}, follow:{fb:[],tk:[],ig:[]}, views:{tk:[],yt:[]}, webDetail:{time:[],bounce:[], users: [], pagesPerSession: []}, ytSubs:[], mapDetail:{clicks:[],search:[]}, leads:{fb:[],tk:[],web:[],hotline:[],zalo:[],other:[]} }, stations: {} };
         let filteredData = JSON.parse(JSON.stringify(parsedData));
 
@@ -385,7 +384,6 @@
 
         function generateAllInsights() {
             let fd = filteredData.marketing;
-            // Cập nhật tính tổng leads với các nguồn mới
             let totalLeads = sumArray(fd.leads.fb) + sumArray(fd.leads.tk) + sumArray(fd.leads.web) + sumArray(fd.leads.hotline) + sumArray(fd.leads.zalo) + sumArray(fd.leads.other);
             if(!textAnalysis.overview.pros) textAnalysis.overview.pros = `Tổng mức độ tiếp cận đa kênh duy trì ổn định.<br>Hệ thống tạo ra <b>${totalLeads.toLocaleString('vi-VN')} leads</b> tổng cộng, phễu marketing đang hoạt động tốt.`;
             if(!textAnalysis.overview.cons) textAnalysis.overview.cons = `Tốc độ tăng trưởng ở một số nền tảng cốt lõi còn chậm.<br>Cần theo dõi thêm tỷ lệ chuyển đổi Lead thực tế.`;
@@ -517,7 +515,6 @@
             let tPosts = sumArray(mk.posts.fb) + sumArray(mk.posts.tk) + sumArray(mk.posts.ig) + sumArray(mk.posts.web) + sumArray(mk.posts.yt) + sumArray(mk.posts.map) + sumArray(mk.posts.seed);
             let tReach = sumArray(mk.reach.fb) + sumArray(mk.reach.tk) + sumArray(mk.reach.ig);
             let tFollowers = sumArray(mk.follow.fb) + sumArray(mk.follow.tk) + sumArray(mk.follow.ig);
-            // Cập nhật công thức lấy tổng leads hiển thị ở Overview
             let tLeads = sumArray(mk.leads.fb) + sumArray(mk.leads.tk) + sumArray(mk.leads.web) + sumArray(mk.leads.hotline) + sumArray(mk.leads.zalo) + sumArray(mk.leads.other);
             document.getElementById('total-posts').innerText = tPosts.toLocaleString('vi-VN'); document.getElementById('total-reach').innerText = tReach.toLocaleString('vi-VN'); document.getElementById('total-followers').innerText = tFollowers.toLocaleString('vi-VN'); document.getElementById('total-leads').innerText = tLeads.toLocaleString('vi-VN');
 
@@ -534,7 +531,6 @@
 
             if (['facebook', 'instagram'].includes(tabId)) { let idc = tabId === 'facebook' ? 'fb' : 'ig'; container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts[idc]), 'slate-700') + makeCard('Tiếp Cận', sumArray(mk.reach[idc]), 'emerald-500') + makeCard('Follower', getLast(mk.follow[idc]), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact[idc]), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Số Lượng Bài Viết') + makeCanvasHTML('chart2', 'Lượt Tiếp Cận & Tương Tác'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts[idc], backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [ {label: 'Tiếp Cận', data: mk.reach[idc], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4}, {label: 'Tương Tác', data: mk.interact[idc], borderColor: '#3b82f6', tension: 0.4} ]); }, 50); } 
             else if (tabId === 'tiktok') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Bài', sumArray(mk.posts.tk), 'slate-700') + makeCard('Lượt Xem', sumArray(mk.views.tk), 'red-500') + makeCard('Follower', getLast(mk.follow.tk), 'pink-500') + makeCard('Tương Tác', sumArray(mk.interact.tk), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Viết') + makeCanvasHTML('chart2', 'Views'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Viết', data: mk.posts.tk, backgroundColor: '#1e293b'}]); renderChart('chart2', 'line', filteredData.months, [{label: 'Views', data: mk.views.tk, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); }, 50); }
-            
             else if (tabId === 'website') { 
                 container.classList.add('grid-cols-1', 'lg:grid-cols-2'); 
                 let wbd = mk.webDetail; 
@@ -555,7 +551,6 @@
                     ]); 
                 }, 50); 
             }
-
             else if (tabId === 'youtube') { container.classList.add('grid-cols-1', 'lg:grid-cols-2'); metricsDiv.innerHTML = makeCard('Tổng Video', sumArray(mk.posts.yt), 'slate-700') + makeCard('Tổng Xem', sumArray(mk.views.yt), 'red-500') + makeCard('Subscribe Tích Lũy', getLast(mk.ytSubs), 'pink-500'); container.innerHTML = makeCanvasHTML('chart1', 'Views') + makeCanvasHTML('chart2', 'Subscribe'); setTimeout(() => { renderChart('chart1', 'line', filteredData.months, [{label: 'Views', data: mk.views.yt, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4}]); renderChart('chart2', 'bar', filteredData.months, [{label: 'Subscribe', data: mk.ytSubs, backgroundColor: '#ec4899'}]); }, 50); }
             else if (tabId === 'maps') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Post', sumArray(mk.posts.map), 'slate-700') + makeCard('Clicks', sumArray(mk.mapDetail.clicks), 'orange-500') + makeCard('Tìm Kiếm', sumArray(mk.mapDetail.search), 'blue-500'); container.innerHTML = makeCanvasHTML('chart1', 'Lượt Nhấp & Tìm Kiếm'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [ {label: 'Lượt Nhấp', data: mk.mapDetail.clicks, backgroundColor: '#f97316'}, {label: 'Tìm Kiếm', data: mk.mapDetail.search, backgroundColor: '#3b82f6'} ]); }, 50); }
             else if (tabId === 'seeding') { container.classList.add('grid-cols-1'); metricsDiv.innerHTML = makeCard('Tổng Bài Seeding', sumArray(mk.posts.seed), 'indigo-500'); container.innerHTML = makeCanvasHTML('chart1', 'Bài Đăng Seeding'); setTimeout(() => { renderChart('chart1', 'bar', filteredData.months, [{label: 'Bài Đăng', data: mk.posts.seed, backgroundColor: '#6366f1'}]); }, 50); }
@@ -570,7 +565,6 @@
             `;
         }
 
-        // Cập nhật biểu đồ Khách hàng Leads
         function renderLeadsChart() {
             clearAllCharts(); const ctx = document.getElementById('leadsStackedChart');
             if(ctx) {
@@ -600,6 +594,7 @@
             }
         }
 
+        // Cập nhật phân tích Khuyến mãi riêng AC và DC
         function renderCompetitorsChart() {
             clearAllCharts(); let arrEntities = filteredData.entities; 
             let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
@@ -610,7 +605,7 @@
 
             let stats = arrEntities.map(ent => {
                 let st = filteredData.stations[ent];
-                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKm: getLastF(st.prKm) };
+                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKmac: getLastF(st.prKmac), prKmdc: getLastF(st.prKmdc) };
                 marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.acMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; marketP7 += obj.p7; marketP11 += obj.p11; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
                 if(obj.prAc > 0) { sumAcPrice += obj.prAc; countAc++; } if(obj.prDc > 0) { sumDcPrice += obj.prDc; countDc++; }
                 return obj;
@@ -649,8 +644,21 @@
             document.getElementById('summary-promo').innerHTML = textAnalysis.competitors.promo || `Hiện tại chưa có ghi chú khuyến mãi đặc biệt nào trong chu kỳ này.`;
             document.getElementById('summary-promo').setAttribute('contenteditable', isLoggedIn ? 'true' : 'false');
 
-            renderChart('compPriceAcChart', 'line', compLabels, [ { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false }, { label: 'Giá Khuyến mãi', data: top10.map(e => e.prKm), borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } ], false, false); 
-            renderChart('compPriceDcChart', 'line', compLabels, [ { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false }, { label: 'Giá Khuyến mãi', data: top10.map(e => e.prKm), borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } ], false, false); 
+            // Tính năng ẩn điểm trên biểu đồ nếu giá trị khuyến mãi = 0 (tránh đường kẻ cắm xuống 0 đồng)
+            let dataPrKmac = top10.map(e => e.prKmac > 0 ? e.prKmac : null);
+            let dataPrKmdc = top10.map(e => e.prKmdc > 0 ? e.prKmdc : null);
+
+            renderChart('compPriceAcChart', 'line', compLabels, [ 
+                { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false }, 
+                { label: 'Khuyến mãi AC', data: dataPrKmac, borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, 
+                { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } 
+            ], false, false); 
+            
+            renderChart('compPriceDcChart', 'line', compLabels, [ 
+                { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false }, 
+                { label: 'Khuyến mãi DC', data: dataPrKmdc, borderColor: '#10b981', backgroundColor: '#10b981', borderDash: [5, 5], tension: 0, fill: false }, 
+                { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} } 
+            ], false, false); 
         }
 
         async function fetchFromGoogleSheet(btnElement, directUrl = null) {
@@ -739,7 +747,6 @@
                 fillZeroes(td.marketing);
                 const getVal = (cols, hdrs, name) => { let idx = hdrs.indexOf(name.toLowerCase()); if (idx === -1) return 0; let v = parseFloat(cols[idx]); return isNaN(v) ? 0 : v; };
 
-                // Cập nhật hàm lấy dữ liệu Lead
                 mData.forEach(cols => {
                     let ck = cols[headers.m.indexOf('chuky')]; let mIdx = newMonths.indexOf(ck); if (mIdx === -1) return;
                     td.marketing.posts.fb[mIdx] = getVal(cols, headers.m, 'fb_posts'); td.marketing.reach.fb[mIdx] = getVal(cols, headers.m, 'fb_reach'); td.marketing.interact.fb[mIdx] = getVal(cols, headers.m, 'fb_interact'); td.marketing.follow.fb[mIdx] = getVal(cols, headers.m, 'fb_follow');
@@ -775,19 +782,19 @@
                     stationRaw[name][ck] = {
                         ac: getVal(cols, headers.s, 'ac'), dc: getVal(cols, headers.s, 'dc'), acMB: getVal(cols, headers.s, 'ac_mb'), dcMB: getVal(cols, headers.s, 'dc_mb'), acMT: getVal(cols, headers.s, 'ac_mt'), dcMT: getVal(cols, headers.s, 'dc_mt'), acMN: getVal(cols, headers.s, 'ac_mn'), dcMN: getVal(cols, headers.s, 'dc_mn'),
                         p7: getVal(cols, headers.s, 'pow7'), p11: getVal(cols, headers.s, 'pow11'), p20: getVal(cols, headers.s, 'pow20'), p60: getVal(cols, headers.s, 'pow60'), p120: getVal(cols, headers.s, 'pow120'),
-                        prAc: getVal(cols, headers.s, 'pr_ac'), prDc: getVal(cols, headers.s, 'pr_dc'), prKm: getVal(cols, headers.s, 'pr_km')
+                        prAc: getVal(cols, headers.s, 'pr_ac'), prDc: getVal(cols, headers.s, 'pr_dc'), prKmac: getVal(cols, headers.s, 'pr_km_ac'), prKmdc: getVal(cols, headers.s, 'pr_km_dc')
                     };
                 });
 
                 td.entities.forEach(ent => {
-                    td.stations[ent] = { ac: new Array(newMonths.length).fill(0), dc: new Array(newMonths.length).fill(0), tot: new Array(newMonths.length).fill(0), acMB: new Array(newMonths.length).fill(0), dcMB: new Array(newMonths.length).fill(0), acMT: new Array(newMonths.length).fill(0), dcMT: new Array(newMonths.length).fill(0), acMN: new Array(newMonths.length).fill(0), dcMN: new Array(newMonths.length).fill(0), p7: new Array(newMonths.length).fill(0), p11: new Array(newMonths.length).fill(0), p20: new Array(newMonths.length).fill(0), p60: new Array(newMonths.length).fill(0), p120: new Array(newMonths.length).fill(0), prAc: new Array(newMonths.length).fill(0), prDc: new Array(newMonths.length).fill(0), prKm: new Array(newMonths.length).fill(0) };
-                    let lastVals = { ac:0, dc:0, acMB:0, dcMB:0, acMT:0, dcMT:0, acMN:0, dcMN:0, p7:0, p11:0, p20:0, p60:0, p120:0, prAc:0, prDc:0, prKm:0 };
+                    td.stations[ent] = { ac: new Array(newMonths.length).fill(0), dc: new Array(newMonths.length).fill(0), tot: new Array(newMonths.length).fill(0), acMB: new Array(newMonths.length).fill(0), dcMB: new Array(newMonths.length).fill(0), acMT: new Array(newMonths.length).fill(0), dcMT: new Array(newMonths.length).fill(0), acMN: new Array(newMonths.length).fill(0), dcMN: new Array(newMonths.length).fill(0), p7: new Array(newMonths.length).fill(0), p11: new Array(newMonths.length).fill(0), p20: new Array(newMonths.length).fill(0), p60: new Array(newMonths.length).fill(0), p120: new Array(newMonths.length).fill(0), prAc: new Array(newMonths.length).fill(0), prDc: new Array(newMonths.length).fill(0), prKmac: new Array(newMonths.length).fill(0), prKmdc: new Array(newMonths.length).fill(0) };
+                    let lastVals = { ac:0, dc:0, acMB:0, dcMB:0, acMT:0, dcMT:0, acMN:0, dcMN:0, p7:0, p11:0, p20:0, p60:0, p120:0, prAc:0, prDc:0, prKmac:0, prKmdc:0 };
                     newMonths.forEach((m, mIdx) => {
                         if (stationRaw[ent] && stationRaw[ent][m]) { lastVals = { ...stationRaw[ent][m] }; }
                         td.stations[ent].ac[mIdx] = lastVals.ac; td.stations[ent].dc[mIdx] = lastVals.dc; td.stations[ent].tot[mIdx] = lastVals.ac + lastVals.dc;
                         td.stations[ent].acMB[mIdx] = lastVals.acMB; td.stations[ent].dcMB[mIdx] = lastVals.dcMB; td.stations[ent].acMT[mIdx] = lastVals.acMT; td.stations[ent].dcMT[mIdx] = lastVals.dcMT; td.stations[ent].acMN[mIdx] = lastVals.acMN; td.stations[ent].dcMN[mIdx] = lastVals.dcMN;
                         td.stations[ent].p7[mIdx] = lastVals.p7; td.stations[ent].p11[mIdx] = lastVals.p11; td.stations[ent].p20[mIdx] = lastVals.p20; td.stations[ent].p60[mIdx] = lastVals.p60; td.stations[ent].p120[mIdx] = lastVals.p120;
-                        td.stations[ent].prAc[mIdx] = lastVals.prAc; td.stations[ent].prDc[mIdx] = lastVals.prDc; td.stations[ent].prKm[mIdx] = lastVals.prKm;
+                        td.stations[ent].prAc[mIdx] = lastVals.prAc; td.stations[ent].prDc[mIdx] = lastVals.prDc; td.stations[ent].prKmac[mIdx] = lastVals.prKmac; td.stations[ent].prKmdc[mIdx] = lastVals.prKmdc;
                     });
                 });
 
