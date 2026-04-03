@@ -594,19 +594,19 @@
             }
         }
 
-        // BIỂU ĐỒ ĐỐI THỦ: Nổi bật điểm giá Khuyến mãi
+        // Cập nhật Cột Thống Kê Công Suất & Dấu Chấm Khuyến Mãi
         function renderCompetitorsChart() {
             clearAllCharts(); let arrEntities = filteredData.entities; 
             let marketAc = 0, marketDc = 0, marketTot = 0, marketAcMB = 0, marketDcMB = 0, marketAcMT = 0, marketDcMT = 0, marketAcMN = 0, marketDcMN = 0;
-            let sumAcPrice = 0, sumDcPrice = 0, countAc = 0, countDc = 0, marketP7 = 0, marketP11 = 0, marketP20 = 0, marketP60 = 0, marketP120 = 0;
+            let sumAcPrice = 0, sumDcPrice = 0, countAc = 0, countDc = 0, marketP7 = 0, marketP11 = 0, marketP22 = 0, marketP20 = 0, marketP60 = 0, marketP120 = 0;
 
             const getLastF = (arr) => arr && arr.length > 0 ? arr[arr.length - 1] : 0;
             const getPrevF = (arr) => arr && arr.length > 1 ? arr[arr.length - 2] : 0;
 
             let stats = arrEntities.map(ent => {
                 let st = filteredData.stations[ent];
-                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKmac: getLastF(st.prKmac), prKmdc: getLastF(st.prKmdc) };
-                marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.acMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; marketP7 += obj.p7; marketP11 += obj.p11; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
+                let obj = { name: ent, ac: getLastF(st.ac), dc: getLastF(st.dc), tot: getLastF(st.tot), prevTot: getPrevF(st.tot), acMB: getLastF(st.acMB), dcMB: getLastF(st.dcMB), acMT: getLastF(st.acMT), dcMT: getLastF(st.dcMT), acMN: getLastF(st.acMN), dcMN: getLastF(st.dcMN), p7: getLastF(st.p7), p11: getLastF(st.p11), p22: getLastF(st.p22), p20: getLastF(st.p20), p60: getLastF(st.p60), p120: getLastF(st.p120), prAc: getLastF(st.prAc), prDc: getLastF(st.prDc), prKmac: getLastF(st.prKmac), prKmdc: getLastF(st.prKmdc) };
+                marketAc += obj.ac; marketDc += obj.dc; marketTot += obj.tot; marketAcMB += obj.acMB; marketDcMB += obj.dcMB; marketAcMT += obj.acMT; marketDcMT += obj.acMT; marketAcMN += obj.acMN; marketDcMN += obj.dcMN; marketP7 += obj.p7; marketP11 += obj.p11; marketP22 += obj.p22; marketP20 += obj.p20; marketP60 += obj.p60; marketP120 += obj.p120;
                 if(obj.prAc > 0) { sumAcPrice += obj.prAc; countAc++; } if(obj.prDc > 0) { sumDcPrice += obj.prDc; countDc++; }
                 return obj;
             });
@@ -639,7 +639,15 @@
             document.getElementById('summary-power').innerHTML = textAnalysis.competitors.power || `<b><i class="fa-solid fa-wand-magic-sparkles"></i> Nhận định AI:</b> Hạ tầng thị trường phân bổ chủ yếu vào các dòng công suất cao.`;
             document.getElementById('summary-power').setAttribute('contenteditable', isLoggedIn ? 'true' : 'false');
             
-            renderChart('compPowerChart', 'bar', compLabels, [ { label: '7kW', data: top10.map(e => e.p7), backgroundColor: '#94a3b8' }, { label: '11/22kW', data: top10.map(e => e.p11), backgroundColor: '#3b82f6' }, { label: '20-40kW', data: top10.map(e => e.p20), backgroundColor: '#fcd34d' }, { label: '60-90kW', data: top10.map(e => e.p60), backgroundColor: '#f97316' }, { label: '>120kW', data: top10.map(e => e.p120), backgroundColor: '#ef4444' } ], true, true); 
+            // Vẽ biểu đồ 6 nhãn công suất
+            renderChart('compPowerChart', 'bar', compLabels, [ 
+                { label: 'Trụ AC 7kW', data: top10.map(e => e.p7), backgroundColor: '#94a3b8' }, 
+                { label: 'Trụ AC 11kW', data: top10.map(e => e.p11), backgroundColor: '#3b82f6' }, 
+                { label: 'Trụ AC 22kW', data: top10.map(e => e.p22), backgroundColor: '#0ea5e9' }, 
+                { label: 'Trụ DC 20 - 40kW', data: top10.map(e => e.p20), backgroundColor: '#fcd34d' }, 
+                { label: 'Trụ DC 60kW - 90kW', data: top10.map(e => e.p60), backgroundColor: '#f97316' }, 
+                { label: 'Trụ DC >= 120kW', data: top10.map(e => e.p120), backgroundColor: '#ef4444' } 
+            ], true, true); 
 
             document.getElementById('summary-promo').innerHTML = textAnalysis.competitors.promo || `Hiện tại chưa có ghi chú khuyến mãi đặc biệt nào trong chu kỳ này.`;
             document.getElementById('summary-promo').setAttribute('contenteditable', isLoggedIn ? 'true' : 'false');
@@ -647,14 +655,12 @@
             let dataPrKmac = top10.map(e => e.prKmac > 0 ? e.prKmac : null);
             let dataPrKmdc = top10.map(e => e.prKmdc > 0 ? e.prKmdc : null);
 
-            // Vẽ bảng giá AC (Line Giá gốc vẽ trước, Chấm Khuyến mãi vẽ sau cùng đè lên trên)
             renderChart('compPriceAcChart', 'line', compLabels, [ 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrAc), borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} },
                 { label: 'Giá sạc AC', data: top10.map(e => e.prAc), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, fill: false, pointRadius: 4 }, 
                 { label: 'Khuyến mãi AC', data: dataPrKmac, type: 'line', showLine: false, pointStyle: 'circle', pointRadius: 8, pointHoverRadius: 10, pointBackgroundColor: '#10b981', pointBorderColor: '#ffffff', pointBorderWidth: 2, backgroundColor: '#10b981', datalabels: { display: true, color: '#059669', align: 'bottom', anchor: 'start', font: {weight: 'bold', size: 11}, formatter: function(v){ return v ? 'KM: ' + v.toLocaleString('vi-VN') + 'đ' : ''; } } } 
             ], false, false); 
             
-            // Vẽ bảng giá DC (Line Giá gốc vẽ trước, Chấm Khuyến mãi vẽ sau cùng đè lên trên)
             renderChart('compPriceDcChart', 'line', compLabels, [ 
                 { label: 'Trung bình', data: Array(top10.length).fill(avgPrDc), borderColor: 'rgba(249, 115, 22, 0.4)', borderWidth: 2, pointRadius: 0, fill: false, datalabels: {display: false} },
                 { label: 'Giá sạc DC', data: top10.map(e => e.prDc), borderColor: '#f97316', backgroundColor: '#f97316', tension: 0.2, fill: false, pointRadius: 4 }, 
@@ -747,7 +753,6 @@
                 const fillZeroes = (obj) => { Object.keys(obj).forEach(k => { if (Array.isArray(obj[k])) obj[k] = new Array(newMonths.length).fill(0); else fillZeroes(obj[k]); }); };
                 fillZeroes(td.marketing);
                 
-                // HÀM ĐỌC DỮ LIỆU MỚI: Tự động xóa phẩy, chữ đ, chữ vnd để tránh lỗi đọc thành số 0
                 const getVal = (cols, hdrs, name) => { 
                     let idx = hdrs.indexOf(name.toLowerCase()); 
                     if (idx === -1 || cols[idx] === undefined) return 0; 
@@ -790,19 +795,19 @@
                     if (!stationRaw[name]) stationRaw[name] = {};
                     stationRaw[name][ck] = {
                         ac: getVal(cols, headers.s, 'ac'), dc: getVal(cols, headers.s, 'dc'), acMB: getVal(cols, headers.s, 'ac_mb'), dcMB: getVal(cols, headers.s, 'dc_mb'), acMT: getVal(cols, headers.s, 'ac_mt'), dcMT: getVal(cols, headers.s, 'dc_mt'), acMN: getVal(cols, headers.s, 'ac_mn'), dcMN: getVal(cols, headers.s, 'dc_mn'),
-                        p7: getVal(cols, headers.s, 'pow7'), p11: getVal(cols, headers.s, 'pow11'), p20: getVal(cols, headers.s, 'pow20'), p60: getVal(cols, headers.s, 'pow60'), p120: getVal(cols, headers.s, 'pow120'),
+                        p7: getVal(cols, headers.s, 'pow7'), p11: getVal(cols, headers.s, 'pow11'), p22: getVal(cols, headers.s, 'pow22'), p20: getVal(cols, headers.s, 'pow20'), p60: getVal(cols, headers.s, 'pow60'), p120: getVal(cols, headers.s, 'pow120'),
                         prAc: getVal(cols, headers.s, 'pr_ac'), prDc: getVal(cols, headers.s, 'pr_dc'), prKmac: getVal(cols, headers.s, 'pr_km_ac'), prKmdc: getVal(cols, headers.s, 'pr_km_dc')
                     };
                 });
 
                 td.entities.forEach(ent => {
-                    td.stations[ent] = { ac: new Array(newMonths.length).fill(0), dc: new Array(newMonths.length).fill(0), tot: new Array(newMonths.length).fill(0), acMB: new Array(newMonths.length).fill(0), dcMB: new Array(newMonths.length).fill(0), acMT: new Array(newMonths.length).fill(0), dcMT: new Array(newMonths.length).fill(0), acMN: new Array(newMonths.length).fill(0), dcMN: new Array(newMonths.length).fill(0), p7: new Array(newMonths.length).fill(0), p11: new Array(newMonths.length).fill(0), p20: new Array(newMonths.length).fill(0), p60: new Array(newMonths.length).fill(0), p120: new Array(newMonths.length).fill(0), prAc: new Array(newMonths.length).fill(0), prDc: new Array(newMonths.length).fill(0), prKmac: new Array(newMonths.length).fill(0), prKmdc: new Array(newMonths.length).fill(0) };
-                    let lastVals = { ac:0, dc:0, acMB:0, dcMB:0, acMT:0, dcMT:0, acMN:0, dcMN:0, p7:0, p11:0, p20:0, p60:0, p120:0, prAc:0, prDc:0, prKmac:0, prKmdc:0 };
+                    td.stations[ent] = { ac: new Array(newMonths.length).fill(0), dc: new Array(newMonths.length).fill(0), tot: new Array(newMonths.length).fill(0), acMB: new Array(newMonths.length).fill(0), dcMB: new Array(newMonths.length).fill(0), acMT: new Array(newMonths.length).fill(0), dcMT: new Array(newMonths.length).fill(0), acMN: new Array(newMonths.length).fill(0), dcMN: new Array(newMonths.length).fill(0), p7: new Array(newMonths.length).fill(0), p11: new Array(newMonths.length).fill(0), p22: new Array(newMonths.length).fill(0), p20: new Array(newMonths.length).fill(0), p60: new Array(newMonths.length).fill(0), p120: new Array(newMonths.length).fill(0), prAc: new Array(newMonths.length).fill(0), prDc: new Array(newMonths.length).fill(0), prKmac: new Array(newMonths.length).fill(0), prKmdc: new Array(newMonths.length).fill(0) };
+                    let lastVals = { ac:0, dc:0, acMB:0, dcMB:0, acMT:0, dcMT:0, acMN:0, dcMN:0, p7:0, p11:0, p22:0, p20:0, p60:0, p120:0, prAc:0, prDc:0, prKmac:0, prKmdc:0 };
                     newMonths.forEach((m, mIdx) => {
                         if (stationRaw[ent] && stationRaw[ent][m]) { lastVals = { ...stationRaw[ent][m] }; }
                         td.stations[ent].ac[mIdx] = lastVals.ac; td.stations[ent].dc[mIdx] = lastVals.dc; td.stations[ent].tot[mIdx] = lastVals.ac + lastVals.dc;
                         td.stations[ent].acMB[mIdx] = lastVals.acMB; td.stations[ent].dcMB[mIdx] = lastVals.dcMB; td.stations[ent].acMT[mIdx] = lastVals.acMT; td.stations[ent].dcMT[mIdx] = lastVals.dcMT; td.stations[ent].acMN[mIdx] = lastVals.acMN; td.stations[ent].dcMN[mIdx] = lastVals.dcMN;
-                        td.stations[ent].p7[mIdx] = lastVals.p7; td.stations[ent].p11[mIdx] = lastVals.p11; td.stations[ent].p20[mIdx] = lastVals.p20; td.stations[ent].p60[mIdx] = lastVals.p60; td.stations[ent].p120[mIdx] = lastVals.p120;
+                        td.stations[ent].p7[mIdx] = lastVals.p7; td.stations[ent].p11[mIdx] = lastVals.p11; td.stations[ent].p22[mIdx] = lastVals.p22; td.stations[ent].p20[mIdx] = lastVals.p20; td.stations[ent].p60[mIdx] = lastVals.p60; td.stations[ent].p120[mIdx] = lastVals.p120;
                         td.stations[ent].prAc[mIdx] = lastVals.prAc; td.stations[ent].prDc[mIdx] = lastVals.prDc; td.stations[ent].prKmac[mIdx] = lastVals.prKmac; td.stations[ent].prKmdc[mIdx] = lastVals.prKmdc;
                     });
                 });
